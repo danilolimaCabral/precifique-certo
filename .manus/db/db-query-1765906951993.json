@@ -1,0 +1,40 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CoKcC9nrGmnRVN.e5cb2b17c667 --database 4s2RPQbUiLyDQzYKK4VQq2 --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_4s2RPQbUiLyDQzYKK4VQq2": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_4s2RPQbUiLyDQzYKK4VQq2": "customCharges"
+    },
+    {
+      "Tables_in_4s2RPQbUiLyDQzYKK4VQq2": "marketplaces"
+    },
+    {
+      "Tables_in_4s2RPQbUiLyDQzYKK4VQq2": "materials"
+    },
+    {
+      "Tables_in_4s2RPQbUiLyDQzYKK4VQq2": "productMaterials"
+    },
+    {
+      "Tables_in_4s2RPQbUiLyDQzYKK4VQq2": "productPrices"
+    },
+    {
+      "Tables_in_4s2RPQbUiLyDQzYKK4VQq2": "products"
+    },
+    {
+      "Tables_in_4s2RPQbUiLyDQzYKK4VQq2": "shippingRanges"
+    },
+    {
+      "Tables_in_4s2RPQbUiLyDQzYKK4VQq2": "userSettings"
+    },
+    {
+      "Tables_in_4s2RPQbUiLyDQzYKK4VQq2": "users"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_4s2RPQbUiLyDQzYKK4VQq2\n__drizzle_migrations\ncustomCharges\nmarketplaces\nmaterials\nproductMaterials\nproductPrices\nproducts\nshippingRanges\nuserSettings\nusers\n",
+  "stderr": "",
+  "execution_time_ms": 664
+}

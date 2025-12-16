@@ -1,0 +1,40 @@
+{
+  "query": "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE();",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CoKcC9nrGmnRVN.e5cb2b17c667 --database 4s2RPQbUiLyDQzYKK4VQq2 --execute SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE();",
+  "rows": [
+    {
+      "TABLE_NAME": "__drizzle_migrations"
+    },
+    {
+      "TABLE_NAME": "users"
+    },
+    {
+      "TABLE_NAME": "customCharges"
+    },
+    {
+      "TABLE_NAME": "marketplaces"
+    },
+    {
+      "TABLE_NAME": "materials"
+    },
+    {
+      "TABLE_NAME": "productMaterials"
+    },
+    {
+      "TABLE_NAME": "productPrices"
+    },
+    {
+      "TABLE_NAME": "products"
+    },
+    {
+      "TABLE_NAME": "shippingRanges"
+    },
+    {
+      "TABLE_NAME": "userSettings"
+    }
+  ],
+  "messages": [],
+  "stdout": "TABLE_NAME\n__drizzle_migrations\nusers\ncustomCharges\nmarketplaces\nmaterials\nproductMaterials\nproductPrices\nproducts\nshippingRanges\nuserSettings\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

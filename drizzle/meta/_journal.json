@@ -1,5 +1,20 @@
 {
   "version": "7",
   "dialect": "mysql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1765906874216,
+      "tag": "0000_previous_starfox",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1765906935684,
+      "tag": "0001_nosy_korg",
+      "breakpoints": true
+    }
+  ]
 }

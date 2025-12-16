@@ -1,17 +1,7 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, boolean } from "drizzle-orm/mysql-core";
 
-/**
- * Core user table backing auth flow.
- * Extend this file with additional tables as your product grows.
- * Columns use camelCase to match both database fields and generated types.
- */
 export const users = mysqlTable("users", {
-  /**
-   * Surrogate primary key. Auto-incremented numeric value managed by the database.
-   * Use this for relations between tables.
-   */
   id: int("id").autoincrement().primaryKey(),
-  /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
@@ -25,4 +15,120 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+// Materials (Insumos e Embalagens)
+export const materials = mysqlTable("materials", {
+  id: int("id").autoincrement().primaryKey(),
+  sku: varchar("sku", { length: 100 }).notNull().unique(),
+  description: text("description").notNull(),
+  type: mysqlEnum("type", ["insumo", "embalagem"]).notNull(),
+  unitCost: decimal("unitCost", { precision: 10, scale: 2 }).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Material = typeof materials.$inferSelect;
+export type InsertMaterial = typeof materials.$inferInsert;
+
+// Products
+export const products = mysqlTable("products", {
+  id: int("id").autoincrement().primaryKey(),
+  sku: varchar("sku", { length: 100 }).notNull().unique(),
+  name: text("name").notNull(),
+  height: decimal("height", { precision: 10, scale: 2 }),
+  width: decimal("width", { precision: 10, scale: 2 }),
+  length: decimal("length", { precision: 10, scale: 2 }),
+  realWeight: decimal("realWeight", { precision: 10, scale: 2 }),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Product = typeof products.$inferSelect;
+export type InsertProduct = typeof products.$inferInsert;
+
+// Product Materials (BOM)
+export const productMaterials = mysqlTable("productMaterials", {
+  id: int("id").autoincrement().primaryKey(),
+  productId: int("productId").notNull(),
+  materialId: int("materialId").notNull(),
+  quantity: decimal("quantity", { precision: 10, scale: 4 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ProductMaterial = typeof productMaterials.$inferSelect;
+export type InsertProductMaterial = typeof productMaterials.$inferInsert;
+
+// Marketplaces
+export const marketplaces = mysqlTable("marketplaces", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  commissionPercent: decimal("commissionPercent", { precision: 5, scale: 2 }).notNull(),
+  fixedFee: decimal("fixedFee", { precision: 10, scale: 2 }).default("0"),
+  logisticsType: varchar("logisticsType", { length: 100 }),
+  freeShipping: boolean("freeShipping").default(false),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Marketplace = typeof marketplaces.$inferSelect;
+export type InsertMarketplace = typeof marketplaces.$inferInsert;
+
+// Shipping Ranges
+export const shippingRanges = mysqlTable("shippingRanges", {
+  id: int("id").autoincrement().primaryKey(),
+  marketplaceId: int("marketplaceId").notNull(),
+  minWeight: decimal("minWeight", { precision: 10, scale: 2 }).notNull(),
+  maxWeight: decimal("maxWeight", { precision: 10, scale: 2 }).notNull(),
+  cost: decimal("cost", { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ShippingRange = typeof shippingRanges.$inferSelect;
+export type InsertShippingRange = typeof shippingRanges.$inferInsert;
+
+// Settings
+export const settings = mysqlTable("settings", {
+  id: int("id").autoincrement().primaryKey(),
+  taxName: varchar("taxName", { length: 100 }).default("Simples Nacional"),
+  taxPercent: decimal("taxPercent", { precision: 5, scale: 2 }).default("0"),
+  adsPercent: decimal("adsPercent", { precision: 5, scale: 2 }).default("0"),
+  opexType: mysqlEnum("opexType", ["percent", "fixed"]).default("percent"),
+  opexValue: decimal("opexValue", { precision: 10, scale: 2 }).default("0"),
+  minMarginTarget: decimal("minMarginTarget", { precision: 5, scale: 2 }).default("10"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Settings = typeof settings.$inferSelect;
+export type InsertSettings = typeof settings.$inferInsert;
+
+// Custom Charges
+export const customCharges = mysqlTable("customCharges", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  chargeType: mysqlEnum("chargeType", ["percent_sale", "percent_cost", "fixed"]).notNull(),
+  value: decimal("value", { precision: 10, scale: 2 }).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CustomCharge = typeof customCharges.$inferSelect;
+export type InsertCustomCharge = typeof customCharges.$inferInsert;
+
+// Pricing Records
+export const pricingRecords = mysqlTable("pricingRecords", {
+  id: int("id").autoincrement().primaryKey(),
+  productId: int("productId").notNull(),
+  marketplaceId: int("marketplaceId").notNull(),
+  salePrice: decimal("salePrice", { precision: 10, scale: 2 }).notNull(),
+  ctm: decimal("ctm", { precision: 10, scale: 2 }).notNull(),
+  marginValue: decimal("marginValue", { precision: 10, scale: 2 }).notNull(),
+  marginPercent: decimal("marginPercent", { precision: 5, scale: 2 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PricingRecord = typeof pricingRecords.$inferSelect;
+export type InsertPricingRecord = typeof pricingRecords.$inferInsert;
