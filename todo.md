@@ -36,3 +36,7 @@
 - [x] Testes unitários para custo de produto (BOM)
 - [x] Testes unitários para faixas de frete
 - [x] Testes unitários para alertas de margem
+
+
+## Bugs
+- [x] Tabela settings não existe no banco de dados - executar migração

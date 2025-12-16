@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `settings` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `taxName` varchar(100) DEFAULT 'Simples Nacional',\n  `taxPercent` decimal(5,2) DEFAULT '0',\n  `adsPercent` decimal(5,2) DEFAULT '0',\n  `opexType` enum('percent','fixed') DEFAULT 'percent',\n  `opexValue` decimal(10,2) DEFAULT '0',\n  `minMarginTarget` decimal(5,2) DEFAULT '10',\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `settings_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CoKcC9nrGmnRVN.e5cb2b17c667 --database 4s2RPQbUiLyDQzYKK4VQq2 --execute CREATE TABLE IF NOT EXISTS `settings` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `taxName` varchar(100) DEFAULT 'Simples Nacional',\n  `taxPercent` decimal(5,2) DEFAULT '0',\n  `adsPercent` decimal(5,2) DEFAULT '0',\n  `opexType` enum('percent','fixed') DEFAULT 'percent',\n  `opexValue` decimal(10,2) DEFAULT '0',\n  `minMarginTarget` decimal(5,2) DEFAULT '10',\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `settings_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 178
+}
