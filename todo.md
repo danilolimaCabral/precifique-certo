@@ -137,3 +137,9 @@
 - [x] Verificar e corrigir registro de usuário com email/senha - FUNCIONANDO
 - [x] Verificar e corrigir login com email/senha - FUNCIONANDO
 - [x] Garantir criação correta de sessão após login local - FUNCIONANDO
+
+## Configurações e Autenticação Local
+- [x] Configurar alíquota de imposto (Simples Nacional 6%)
+- [x] Criar usuário local admin (admin@precifiquecerto.com)
+- [x] Remover autenticação OAuth do Manus
+- [x] Deixar apenas login com email/senha

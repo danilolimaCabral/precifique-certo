@@ -19,7 +19,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { getLoginUrl } from "@/const";
+// OAuth removido - apenas login local
 import { useIsMobile } from "@/hooks/useMobile";
 import { 
   LayoutDashboard, 
@@ -128,7 +128,7 @@ export default function DashboardLayout({
             </div>
           </div>
           
-          <div className="w-full space-y-3">
+          <div className="w-full">
             <Button
               onClick={() => {
                 window.location.href = "/login";
@@ -137,17 +137,7 @@ export default function DashboardLayout({
               variant="outline"
               className="w-full"
             >
-              Entrar com Email
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                window.location.href = getLoginUrl();
-              }}
-              size="lg"
-              className="w-full"
-            >
-              Entrar com Google
+              Entrar com Email e Senha
             </Button>
           </div>
         </div>
