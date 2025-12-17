@@ -126,3 +126,6 @@
 - [x] Implementar gráfico de barras de margem por produto
 - [x] Implementar gráfico de pizza de margem por marketplace
 - [x] Adicionar cards de resumo com totais
+
+## Bugs a Corrigir
+- [x] Coluna userId não existe na tabela shippingRanges - adicionar coluna
