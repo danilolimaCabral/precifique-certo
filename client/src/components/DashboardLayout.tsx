@@ -33,7 +33,8 @@ import {
   DollarSign, 
   TrendingDown, 
   Sliders, 
-  Settings 
+  Settings,
+  Shield 
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -51,6 +52,10 @@ const menuItems = [
   { icon: TrendingDown, label: "Preço Mínimo", path: "/preco-minimo" },
   { icon: Sliders, label: "Simulador", path: "/simulador" },
   { icon: Settings, label: "Configurações", path: "/configuracoes" },
+];
+
+const adminMenuItems = [
+  { icon: Shield, label: "Administração", path: "/admin" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -240,6 +245,30 @@ function DashboardLayoutContent({
                   </SidebarMenuItem>
                 );
               })}
+              {/* Admin menu - only visible for admins */}
+              {user?.role === "admin" && (
+                <>
+                  <div className="my-2 mx-2 border-t border-border/50" />
+                  {adminMenuItems.map(item => {
+                    const isActive = location === item.path;
+                    return (
+                      <SidebarMenuItem key={item.path}>
+                        <SidebarMenuButton
+                          isActive={isActive}
+                          onClick={() => setLocation(item.path)}
+                          tooltip={item.label}
+                          className={`h-10 transition-all font-normal ${isActive ? "bg-red-500/10" : ""}`}
+                        >
+                          <item.icon
+                            className={`h-4 w-4 ${isActive ? "text-red-500" : "text-muted-foreground"}`}
+                          />
+                          <span className={isActive ? "text-red-500 font-medium" : ""}>{item.label}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </>
+              )}
             </SidebarMenu>
           </SidebarContent>
 

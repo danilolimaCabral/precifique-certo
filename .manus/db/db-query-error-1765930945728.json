@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE `materials` ADD COLUMN `userId` INT NOT NULL DEFAULT 1 AFTER `id`;\nALTER TABLE `products` ADD COLUMN `userId` INT NOT NULL DEFAULT 1 AFTER `id`;\nALTER TABLE `productMaterials` ADD COLUMN `userId` INT NOT NULL DEFAULT 1 AFTER `id`;\nALTER TABLE `marketplaces` ADD COLUMN `userId` INT NOT NULL DEFAULT 1 AFTER `id`;\nALTER TABLE `shippingRanges` ADD COLUMN `userId` INT NOT NULL DEFAULT 1 AFTER `id`;\nALTER TABLE `settings` ADD COLUMN `userId` INT NOT NULL DEFAULT 1 AFTER `id`;\nALTER TABLE `customCharges` ADD COLUMN `userId` INT NOT NULL DEFAULT 1 AFTER `id`;\nALTER TABLE `pricingRecords` ADD COLUMN `userId` INT NOT NULL DEFAULT 1 AFTER `id`;\nALTER TABLE `materials` DROP INDEX `sku`;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CoKcC9nrGmnRVN.e5cb2b17c667 --database 4s2RPQbUiLyDQzYKK4VQq2 --execute ALTER TABLE `materials` ADD COLUMN `userId` INT NOT NULL DEFAULT 1 AFTER `id`;\nALTER TABLE `products` ADD COLUMN `userId` INT NOT NULL DEFAULT 1 AFTER `id`;\nALTER TABLE `productMaterials` ADD COLUMN `userId` INT NOT NULL DEFAULT 1 AFTER `id`;\nALTER TABLE `marketplaces` ADD COLUMN `userId` INT NOT NULL DEFAULT 1 AFTER `id`;\nALTER TABLE `shippingRanges` ADD COLUMN `userId` INT NOT NULL DEFAULT 1 AFTER `id`;\nALTER TABLE `settings` ADD COLUMN `userId` INT NOT NULL DEFAULT 1 AFTER `id`;\nALTER TABLE `customCharges` ADD COLUMN `userId` INT NOT NULL DEFAULT 1 AFTER `id`;\nALTER TABLE `pricingRecords` ADD COLUMN `userId` INT NOT NULL DEFAULT 1 AFTER `id`;\nALTER TABLE `materials` DROP INDEX `sku`;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1060 (42S21) at line 1: Duplicate column name 'userId'"
+  ]
+}

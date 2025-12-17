@@ -63,3 +63,15 @@
 - [x] Criar página de login com formulário
 - [x] Criar página de cadastro/registro
 - [x] Integrar com sistema de sessão existente
+
+## Sistema Multi-Tenant com Níveis de Permissão
+- [x] Adicionar userId em todas as tabelas de dados (materials, products, settings, etc)
+- [x] Atualizar queries para filtrar por userId do usuário logado
+- [x] Criar adminProcedure para rotas protegidas de admin
+- [x] Criar página de administração de usuários (somente admin)
+- [x] Permitir admin ver todos os usuários e seus dados
+- [x] Implementar controle de acesso no frontend por role
+- [x] Exibir badge de role no perfil do usuário
+- [x] Garantir isolamento de dados entre clientes
+- [x] Cada novo usuário começa com dados zerados (sem dados de outros tenants)
+- [x] 60 testes unitários passando (incluindo 9 testes de multi-tenant)

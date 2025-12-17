@@ -16,6 +16,7 @@ import Simulador from "./pages/Simulador";
 import Configuracoes from "./pages/Configuracoes";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
+import Admin from "./pages/Admin";
 
 function Router() {
   return (
@@ -32,6 +33,7 @@ function Router() {
       <Route path="/configuracoes" component={Configuracoes} />
       <Route path="/login" component={Login} />
       <Route path="/cadastro" component={Cadastro} />
+      <Route path="/admin" component={Admin} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

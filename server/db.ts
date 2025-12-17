@@ -19,6 +19,7 @@ export async function getDb() {
   return _db;
 }
 
+// ============ USER MANAGEMENT ============
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) throw new Error("User openId is required for upsert");
   const db = await getDb();
@@ -61,63 +62,63 @@ export async function getUserByEmail(email: string) {
 export async function createUserWithPassword(data: { name: string; email: string; password: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
-  // Check if email already exists
   const existingUser = await getUserByEmail(data.email);
-  if (existingUser) {
-    throw new Error("Email já cadastrado");
-  }
-  
-  // Hash password
+  if (existingUser) throw new Error("Email já cadastrado");
   const passwordHash = await bcrypt.hash(data.password, 10);
-  
-  // Generate unique openId for local users
   const openId = `local_${nanoid(20)}`;
-  
   const result = await db.insert(users).values({
-    openId,
-    name: data.name,
-    email: data.email,
-    passwordHash,
-    loginMethod: 'email',
-    role: 'user',
-    lastSignedIn: new Date(),
+    openId, name: data.name, email: data.email, passwordHash,
+    loginMethod: 'email', role: 'user', lastSignedIn: new Date(),
   });
-  
   return { id: result[0].insertId, openId, email: data.email, name: data.name };
 }
 
 export async function verifyUserPassword(email: string, password: string) {
   const user = await getUserByEmail(email);
-  if (!user || !user.passwordHash) {
-    return null;
-  }
-  
+  if (!user || !user.passwordHash) return null;
   const isValid = await bcrypt.compare(password, user.passwordHash);
-  if (!isValid) {
-    return null;
-  }
-  
-  // Update last signed in
+  if (!isValid) return null;
   const db = await getDb();
-  if (db) {
-    await db.update(users).set({ lastSignedIn: new Date() }).where(eq(users.id, user.id));
-  }
-  
+  if (db) await db.update(users).set({ lastSignedIn: new Date() }).where(eq(users.id, user.id));
   return user;
 }
 
-// Materials
-export async function getMaterials() {
+// Admin functions
+export async function getAllUsers() {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(materials).orderBy(materials.sku);
+  return db.select({ id: users.id, name: users.name, email: users.email, role: users.role, createdAt: users.createdAt, lastSignedIn: users.lastSignedIn }).from(users).orderBy(users.createdAt);
 }
 
-export async function getMaterialById(id: number) {
+export async function updateUserRole(userId: number, role: "user" | "admin") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ role }).where(eq(users.id, userId));
+  return { success: true };
+}
+
+export async function getUserStats(userId: number) {
+  const db = await getDb();
+  if (!db) return { materials: 0, products: 0, marketplaces: 0 };
+  const [mats, prods, mkts] = await Promise.all([
+    db.select().from(materials).where(eq(materials.userId, userId)),
+    db.select().from(products).where(eq(products.userId, userId)),
+    db.select().from(marketplaces).where(eq(marketplaces.userId, userId)),
+  ]);
+  return { materials: mats.length, products: prods.length, marketplaces: mkts.length };
+}
+
+// ============ MATERIALS (Multi-tenant) ============
+export async function getMaterials(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(materials).where(eq(materials.userId, userId)).orderBy(materials.sku);
+}
+
+export async function getMaterialById(id: number, userId: number) {
   const db = await getDb();
   if (!db) return undefined;
-  const result = await db.select().from(materials).where(eq(materials.id, id)).limit(1);
+  const result = await db.select().from(materials).where(and(eq(materials.id, id), eq(materials.userId, userId))).limit(1);
   return result[0];
 }
 
@@ -128,31 +129,31 @@ export async function createMaterial(data: InsertMaterial) {
   return { id: result[0].insertId, ...data };
 }
 
-export async function updateMaterial(id: number, data: Partial<InsertMaterial>) {
+export async function updateMaterial(id: number, data: Partial<InsertMaterial>, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.update(materials).set(data).where(eq(materials.id, id));
-  return getMaterialById(id);
+  await db.update(materials).set(data).where(and(eq(materials.id, id), eq(materials.userId, userId)));
+  return getMaterialById(id, userId);
 }
 
-export async function deleteMaterial(id: number) {
+export async function deleteMaterial(id: number, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.delete(materials).where(eq(materials.id, id));
+  await db.delete(materials).where(and(eq(materials.id, id), eq(materials.userId, userId)));
   return { success: true };
 }
 
-// Products
-export async function getProducts() {
+// ============ PRODUCTS (Multi-tenant) ============
+export async function getProducts(userId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(products).orderBy(products.sku);
+  return db.select().from(products).where(eq(products.userId, userId)).orderBy(products.sku);
 }
 
-export async function getProductById(id: number) {
+export async function getProductById(id: number, userId: number) {
   const db = await getDb();
   if (!db) return undefined;
-  const result = await db.select().from(products).where(eq(products.id, id)).limit(1);
+  const result = await db.select().from(products).where(and(eq(products.id, id), eq(products.userId, userId))).limit(1);
   return result[0];
 }
 
@@ -163,26 +164,26 @@ export async function createProduct(data: InsertProduct) {
   return { id: result[0].insertId, ...data };
 }
 
-export async function updateProduct(id: number, data: Partial<InsertProduct>) {
+export async function updateProduct(id: number, data: Partial<InsertProduct>, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.update(products).set(data).where(eq(products.id, id));
-  return getProductById(id);
+  await db.update(products).set(data).where(and(eq(products.id, id), eq(products.userId, userId)));
+  return getProductById(id, userId);
 }
 
-export async function deleteProduct(id: number) {
+export async function deleteProduct(id: number, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.delete(productMaterials).where(eq(productMaterials.productId, id));
-  await db.delete(products).where(eq(products.id, id));
+  await db.delete(productMaterials).where(and(eq(productMaterials.productId, id), eq(productMaterials.userId, userId)));
+  await db.delete(products).where(and(eq(products.id, id), eq(products.userId, userId)));
   return { success: true };
 }
 
-// Product Materials (BOM)
-export async function getProductMaterials(productId: number) {
+// ============ PRODUCT MATERIALS / BOM (Multi-tenant) ============
+export async function getProductMaterials(productId: number, userId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(productMaterials).where(eq(productMaterials.productId, productId));
+  return db.select().from(productMaterials).where(and(eq(productMaterials.productId, productId), eq(productMaterials.userId, userId)));
 }
 
 export async function addProductMaterial(data: InsertProductMaterial) {
@@ -192,30 +193,30 @@ export async function addProductMaterial(data: InsertProductMaterial) {
   return { id: result[0].insertId, ...data };
 }
 
-export async function updateProductMaterial(id: number, data: Partial<InsertProductMaterial>) {
+export async function updateProductMaterial(id: number, data: Partial<InsertProductMaterial>, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.update(productMaterials).set(data).where(eq(productMaterials.id, id));
+  await db.update(productMaterials).set(data).where(and(eq(productMaterials.id, id), eq(productMaterials.userId, userId)));
 }
 
-export async function deleteProductMaterial(id: number) {
+export async function deleteProductMaterial(id: number, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.delete(productMaterials).where(eq(productMaterials.id, id));
+  await db.delete(productMaterials).where(and(eq(productMaterials.id, id), eq(productMaterials.userId, userId)));
   return { success: true };
 }
 
-// Marketplaces
-export async function getMarketplaces() {
+// ============ MARKETPLACES (Multi-tenant) ============
+export async function getMarketplaces(userId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(marketplaces).orderBy(marketplaces.name);
+  return db.select().from(marketplaces).where(eq(marketplaces.userId, userId)).orderBy(marketplaces.name);
 }
 
-export async function getMarketplaceById(id: number) {
+export async function getMarketplaceById(id: number, userId: number) {
   const db = await getDb();
   if (!db) return undefined;
-  const result = await db.select().from(marketplaces).where(eq(marketplaces.id, id)).limit(1);
+  const result = await db.select().from(marketplaces).where(and(eq(marketplaces.id, id), eq(marketplaces.userId, userId))).limit(1);
   return result[0];
 }
 
@@ -226,26 +227,26 @@ export async function createMarketplace(data: InsertMarketplace) {
   return { id: result[0].insertId, ...data };
 }
 
-export async function updateMarketplace(id: number, data: Partial<InsertMarketplace>) {
+export async function updateMarketplace(id: number, data: Partial<InsertMarketplace>, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.update(marketplaces).set(data).where(eq(marketplaces.id, id));
-  return getMarketplaceById(id);
+  await db.update(marketplaces).set(data).where(and(eq(marketplaces.id, id), eq(marketplaces.userId, userId)));
+  return getMarketplaceById(id, userId);
 }
 
-export async function deleteMarketplace(id: number) {
+export async function deleteMarketplace(id: number, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.delete(shippingRanges).where(eq(shippingRanges.marketplaceId, id));
-  await db.delete(marketplaces).where(eq(marketplaces.id, id));
+  await db.delete(shippingRanges).where(and(eq(shippingRanges.marketplaceId, id), eq(shippingRanges.userId, userId)));
+  await db.delete(marketplaces).where(and(eq(marketplaces.id, id), eq(marketplaces.userId, userId)));
   return { success: true };
 }
 
-// Shipping Ranges
-export async function getShippingRanges(marketplaceId: number) {
+// ============ SHIPPING RANGES (Multi-tenant) ============
+export async function getShippingRanges(marketplaceId: number, userId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(shippingRanges).where(eq(shippingRanges.marketplaceId, marketplaceId)).orderBy(shippingRanges.minWeight);
+  return db.select().from(shippingRanges).where(and(eq(shippingRanges.marketplaceId, marketplaceId), eq(shippingRanges.userId, userId))).orderBy(shippingRanges.minWeight);
 }
 
 export async function createShippingRange(data: InsertShippingRange) {
@@ -255,50 +256,56 @@ export async function createShippingRange(data: InsertShippingRange) {
   return { id: result[0].insertId, ...data };
 }
 
-export async function updateShippingRange(id: number, data: Partial<InsertShippingRange>) {
+export async function updateShippingRange(id: number, data: Partial<InsertShippingRange>, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.update(shippingRanges).set(data).where(eq(shippingRanges.id, id));
+  await db.update(shippingRanges).set(data).where(and(eq(shippingRanges.id, id), eq(shippingRanges.userId, userId)));
 }
 
-export async function deleteShippingRange(id: number) {
+export async function deleteShippingRange(id: number, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.delete(shippingRanges).where(eq(shippingRanges.id, id));
+  await db.delete(shippingRanges).where(and(eq(shippingRanges.id, id), eq(shippingRanges.userId, userId)));
   return { success: true };
 }
 
-// Settings
-export async function getSettings() {
+// ============ SETTINGS (Multi-tenant) ============
+export async function getSettings(userId: number) {
   const db = await getDb();
   if (!db) return undefined;
-  const result = await db.select().from(settings).limit(1);
+  const result = await db.select().from(settings).where(eq(settings.userId, userId)).limit(1);
+  if (result.length === 0) {
+    // Create default settings for new user
+    await db.insert(settings).values({ userId, taxName: "Simples Nacional", taxPercent: "0", adsPercent: "0", opexType: "percent", opexValue: "0", minMarginTarget: "10" });
+    const newResult = await db.select().from(settings).where(eq(settings.userId, userId)).limit(1);
+    return newResult[0];
+  }
   return result[0];
 }
 
-export async function updateSettings(data: Partial<InsertSettings>) {
+export async function updateSettings(data: Partial<InsertSettings>, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const existing = await getSettings();
+  const existing = await getSettings(userId);
   if (existing) {
-    await db.update(settings).set(data).where(eq(settings.id, existing.id));
+    await db.update(settings).set(data).where(and(eq(settings.id, existing.id), eq(settings.userId, userId)));
   } else {
-    await db.insert(settings).values(data as InsertSettings);
+    await db.insert(settings).values({ ...data, userId } as InsertSettings);
   }
-  return getSettings();
+  return getSettings(userId);
 }
 
-// Custom Charges
-export async function getCustomCharges() {
+// ============ CUSTOM CHARGES (Multi-tenant) ============
+export async function getCustomCharges(userId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(customCharges).orderBy(customCharges.name);
+  return db.select().from(customCharges).where(eq(customCharges.userId, userId)).orderBy(customCharges.name);
 }
 
-export async function getCustomChargeById(id: number) {
+export async function getCustomChargeById(id: number, userId: number) {
   const db = await getDb();
   if (!db) return undefined;
-  const result = await db.select().from(customCharges).where(eq(customCharges.id, id)).limit(1);
+  const result = await db.select().from(customCharges).where(and(eq(customCharges.id, id), eq(customCharges.userId, userId))).limit(1);
   return result[0];
 }
 
@@ -309,28 +316,28 @@ export async function createCustomCharge(data: InsertCustomCharge) {
   return { id: result[0].insertId, ...data };
 }
 
-export async function updateCustomCharge(id: number, data: Partial<InsertCustomCharge>) {
+export async function updateCustomCharge(id: number, data: Partial<InsertCustomCharge>, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.update(customCharges).set(data).where(eq(customCharges.id, id));
-  return getCustomChargeById(id);
+  await db.update(customCharges).set(data).where(and(eq(customCharges.id, id), eq(customCharges.userId, userId)));
+  return getCustomChargeById(id, userId);
 }
 
-export async function deleteCustomCharge(id: number) {
+export async function deleteCustomCharge(id: number, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.delete(customCharges).where(eq(customCharges.id, id));
+  await db.delete(customCharges).where(and(eq(customCharges.id, id), eq(customCharges.userId, userId)));
   return { success: true };
 }
 
-// Pricing calculation helper
-export async function calculateProductCost(productId: number): Promise<number> {
+// ============ PRICING HELPERS (Multi-tenant) ============
+export async function calculateProductCost(productId: number, userId: number): Promise<number> {
   const db = await getDb();
   if (!db) return 0;
-  const bom = await getProductMaterials(productId);
+  const bom = await getProductMaterials(productId, userId);
   let totalCost = 0;
   for (const item of bom) {
-    const material = await getMaterialById(item.materialId);
+    const material = await getMaterialById(item.materialId, userId);
     if (material) {
       totalCost += parseFloat(material.unitCost as string) * parseFloat(item.quantity as string);
     }
@@ -338,8 +345,8 @@ export async function calculateProductCost(productId: number): Promise<number> {
   return totalCost;
 }
 
-export async function getShippingCost(marketplaceId: number, weight: number): Promise<number> {
-  const ranges = await getShippingRanges(marketplaceId);
+export async function getShippingCost(marketplaceId: number, weight: number, userId: number): Promise<number> {
+  const ranges = await getShippingRanges(marketplaceId, userId);
   for (const range of ranges) {
     const min = parseFloat(range.minWeight as string);
     const max = parseFloat(range.maxWeight as string);

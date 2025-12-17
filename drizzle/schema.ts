@@ -16,10 +16,11 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// Materials (Insumos e Embalagens)
+// Materials (Insumos e Embalagens) - Multi-tenant
 export const materials = mysqlTable("materials", {
   id: int("id").autoincrement().primaryKey(),
-  sku: varchar("sku", { length: 100 }).notNull().unique(),
+  userId: int("userId").notNull(), // Tenant isolation
+  sku: varchar("sku", { length: 100 }).notNull(),
   description: text("description").notNull(),
   type: mysqlEnum("type", ["insumo", "embalagem"]).notNull(),
   unitCost: decimal("unitCost", { precision: 10, scale: 2 }).notNull(),
@@ -31,10 +32,11 @@ export const materials = mysqlTable("materials", {
 export type Material = typeof materials.$inferSelect;
 export type InsertMaterial = typeof materials.$inferInsert;
 
-// Products
+// Products - Multi-tenant
 export const products = mysqlTable("products", {
   id: int("id").autoincrement().primaryKey(),
-  sku: varchar("sku", { length: 100 }).notNull().unique(),
+  userId: int("userId").notNull(), // Tenant isolation
+  sku: varchar("sku", { length: 100 }).notNull(),
   name: text("name").notNull(),
   height: decimal("height", { precision: 10, scale: 2 }),
   width: decimal("width", { precision: 10, scale: 2 }),
@@ -48,9 +50,10 @@ export const products = mysqlTable("products", {
 export type Product = typeof products.$inferSelect;
 export type InsertProduct = typeof products.$inferInsert;
 
-// Product Materials (BOM)
+// Product Materials (BOM) - Multi-tenant (inherits from product)
 export const productMaterials = mysqlTable("productMaterials", {
   id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(), // Tenant isolation
   productId: int("productId").notNull(),
   materialId: int("materialId").notNull(),
   quantity: decimal("quantity", { precision: 10, scale: 4 }).notNull(),
@@ -60,9 +63,10 @@ export const productMaterials = mysqlTable("productMaterials", {
 export type ProductMaterial = typeof productMaterials.$inferSelect;
 export type InsertProductMaterial = typeof productMaterials.$inferInsert;
 
-// Marketplaces
+// Marketplaces - Multi-tenant
 export const marketplaces = mysqlTable("marketplaces", {
   id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(), // Tenant isolation
   name: varchar("name", { length: 100 }).notNull(),
   commissionPercent: decimal("commissionPercent", { precision: 5, scale: 2 }).notNull(),
   fixedFee: decimal("fixedFee", { precision: 10, scale: 2 }).default("0"),
@@ -76,9 +80,10 @@ export const marketplaces = mysqlTable("marketplaces", {
 export type Marketplace = typeof marketplaces.$inferSelect;
 export type InsertMarketplace = typeof marketplaces.$inferInsert;
 
-// Shipping Ranges
+// Shipping Ranges - Multi-tenant (inherits from marketplace)
 export const shippingRanges = mysqlTable("shippingRanges", {
   id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(), // Tenant isolation
   marketplaceId: int("marketplaceId").notNull(),
   minWeight: decimal("minWeight", { precision: 10, scale: 2 }).notNull(),
   maxWeight: decimal("maxWeight", { precision: 10, scale: 2 }).notNull(),
@@ -89,9 +94,10 @@ export const shippingRanges = mysqlTable("shippingRanges", {
 export type ShippingRange = typeof shippingRanges.$inferSelect;
 export type InsertShippingRange = typeof shippingRanges.$inferInsert;
 
-// Settings
+// Settings - Multi-tenant (each user has their own settings)
 export const settings = mysqlTable("settings", {
   id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(), // Tenant isolation
   taxName: varchar("taxName", { length: 100 }).default("Simples Nacional"),
   taxPercent: decimal("taxPercent", { precision: 5, scale: 2 }).default("0"),
   adsPercent: decimal("adsPercent", { precision: 5, scale: 2 }).default("0"),
@@ -104,9 +110,10 @@ export const settings = mysqlTable("settings", {
 export type Settings = typeof settings.$inferSelect;
 export type InsertSettings = typeof settings.$inferInsert;
 
-// Custom Charges
+// Custom Charges - Multi-tenant
 export const customCharges = mysqlTable("customCharges", {
   id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(), // Tenant isolation
   name: varchar("name", { length: 100 }).notNull(),
   chargeType: mysqlEnum("chargeType", ["percent_sale", "percent_cost", "fixed"]).notNull(),
   value: decimal("value", { precision: 10, scale: 2 }).notNull(),
@@ -118,9 +125,10 @@ export const customCharges = mysqlTable("customCharges", {
 export type CustomCharge = typeof customCharges.$inferSelect;
 export type InsertCustomCharge = typeof customCharges.$inferInsert;
 
-// Pricing Records
+// Pricing Records - Multi-tenant
 export const pricingRecords = mysqlTable("pricingRecords", {
   id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(), // Tenant isolation
   productId: int("productId").notNull(),
   marketplaceId: int("marketplaceId").notNull(),
   salePrice: decimal("salePrice", { precision: 10, scale: 2 }).notNull(),
