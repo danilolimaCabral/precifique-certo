@@ -119,3 +119,10 @@
 - [x] Validar dados antes de importar
 - [x] Importar materiais, produtos e BOM em lote
 - [x] Testes unitários para importação (13 testes passando)
+
+## Dashboard com Gráficos
+- [x] Criar procedure para obter dados de margem por produto
+- [x] Criar procedure para obter dados de margem por marketplace
+- [x] Implementar gráfico de barras de margem por produto
+- [x] Implementar gráfico de pizza de margem por marketplace
+- [x] Adicionar cards de resumo com totais

@@ -424,6 +424,140 @@ export const appRouter = router({
       return db.bulkCreateProductMaterials(data);
     }),
   }),
+
+  // Analytics - Dashboard charts data
+  analytics: router({
+    marginByProduct: protectedProcedure.input(z.object({
+      marketplaceId: z.number().optional(),
+      salePrice: z.number().optional(),
+    })).query(async ({ input, ctx }) => {
+      const userId = ctx.user.id;
+      const products = await db.getProducts(userId);
+      const marketplaces = await db.getMarketplaces(userId);
+      const settingsData = await db.getSettings(userId);
+      
+      if (products.length === 0 || marketplaces.length === 0) {
+        return [];
+      }
+      
+      const targetMarketplace = input.marketplaceId 
+        ? marketplaces.find(m => m.id === input.marketplaceId) 
+        : marketplaces[0];
+      
+      if (!targetMarketplace) return [];
+      
+      const results = [];
+      for (const product of products.slice(0, 10)) {
+        const productCost = await db.calculateProductCost(product.id, userId);
+        const realWeight = parseFloat(product.realWeight as string || "0");
+        const shippingCost = await db.getShippingCost(targetMarketplace.id, realWeight, userId);
+        const commissionPercent = parseFloat(targetMarketplace.commissionPercent as string || "0");
+        const fixedFee = parseFloat(targetMarketplace.fixedFee as string || "0");
+        const taxPercent = parseFloat(settingsData?.taxPercent as string || "0");
+        
+        // Use provided sale price or estimate based on cost + 50% margin
+        const salePrice = input.salePrice || (productCost > 0 ? productCost * 1.5 : 100);
+        const commission = (salePrice * commissionPercent / 100) + fixedFee;
+        const taxValue = salePrice * taxPercent / 100;
+        const ctm = productCost + shippingCost + commission + taxValue;
+        const marginValue = salePrice - ctm;
+        const marginPercent = salePrice > 0 ? (marginValue / salePrice) * 100 : 0;
+        
+        results.push({
+          id: product.id,
+          name: product.name || product.sku,
+          sku: product.sku,
+          productCost,
+          salePrice,
+          ctm,
+          marginValue,
+          marginPercent,
+        });
+      }
+      
+      return results;
+    }),
+    
+    marginByMarketplace: protectedProcedure.input(z.object({
+      productId: z.number().optional(),
+      salePrice: z.number().optional(),
+    })).query(async ({ input, ctx }) => {
+      const userId = ctx.user.id;
+      const products = await db.getProducts(userId);
+      const marketplaces = await db.getMarketplaces(userId);
+      const settingsData = await db.getSettings(userId);
+      
+      if (marketplaces.length === 0) {
+        return [];
+      }
+      
+      const targetProduct = input.productId 
+        ? products.find(p => p.id === input.productId) 
+        : products[0];
+      
+      const productCost = targetProduct 
+        ? await db.calculateProductCost(targetProduct.id, userId) 
+        : 50;
+      const realWeight = targetProduct 
+        ? parseFloat(targetProduct.realWeight as string || "0") 
+        : 500;
+      
+      const salePrice = input.salePrice || (productCost > 0 ? productCost * 1.5 : 100);
+      const taxPercent = parseFloat(settingsData?.taxPercent as string || "0");
+      const taxValue = salePrice * taxPercent / 100;
+      
+      const results = [];
+      for (const marketplace of marketplaces) {
+        const shippingCost = await db.getShippingCost(marketplace.id, realWeight, userId);
+        const commissionPercent = parseFloat(marketplace.commissionPercent as string || "0");
+        const fixedFee = parseFloat(marketplace.fixedFee as string || "0");
+        const commission = (salePrice * commissionPercent / 100) + fixedFee;
+        const ctm = productCost + shippingCost + commission + taxValue;
+        const marginValue = salePrice - ctm;
+        const marginPercent = salePrice > 0 ? (marginValue / salePrice) * 100 : 0;
+        
+        results.push({
+          id: marketplace.id,
+          name: marketplace.name,
+          commissionPercent,
+          shippingCost,
+          ctm,
+          marginValue,
+          marginPercent,
+        });
+      }
+      
+      return results;
+    }),
+    
+    summary: protectedProcedure.query(async ({ ctx }) => {
+      const userId = ctx.user.id;
+      const products = await db.getProducts(userId);
+      const marketplaces = await db.getMarketplaces(userId);
+      const materials = await db.getMaterials(userId);
+      const settingsData = await db.getSettings(userId);
+      
+      let totalProductCost = 0;
+      for (const product of products) {
+        totalProductCost += await db.calculateProductCost(product.id, userId);
+      }
+      
+      const avgCommission = marketplaces.length > 0
+        ? marketplaces.reduce((sum, m) => sum + parseFloat(m.commissionPercent as string || "0"), 0) / marketplaces.length
+        : 0;
+      
+      return {
+        totalProducts: products.length,
+        totalMaterials: materials.length,
+        totalMarketplaces: marketplaces.length,
+        totalProductCost,
+        avgProductCost: products.length > 0 ? totalProductCost / products.length : 0,
+        avgCommission,
+        taxPercent: parseFloat(settingsData?.taxPercent as string || "0"),
+        minMarginTarget: parseFloat(settingsData?.minMarginTarget as string || "10"),
+      };
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

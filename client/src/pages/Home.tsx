@@ -1,8 +1,9 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
-import { Package, Boxes, Store, Calculator, TrendingUp, Sparkles, AlertTriangle, Target, Zap } from "lucide-react";
+import { Package, Boxes, Store, Calculator, TrendingUp, Sparkles, AlertTriangle, Target, Zap, BarChart3, PieChart } from "lucide-react";
 import { Link } from "wouter";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPie, Pie, Cell, Legend } from "recharts";
 
 const iconColors: Record<string, string> = {
   primary: "bg-violet-100 text-violet-600",
@@ -11,11 +12,15 @@ const iconColors: Record<string, string> = {
   info: "bg-blue-100 text-blue-600",
 };
 
+const CHART_COLORS = ["#8b5cf6", "#10b981", "#f59e0b", "#ef4444", "#3b82f6", "#ec4899"];
+
 export default function Home() {
   const { data: materials } = trpc.materials.list.useQuery();
   const { data: products } = trpc.products.list.useQuery();
   const { data: marketplaces } = trpc.marketplaces.list.useQuery();
   const { data: settings } = trpc.settings.get.useQuery();
+  const { data: marginByProduct } = trpc.analytics.marginByProduct.useQuery({});
+  const { data: marginByMarketplace } = trpc.analytics.marginByMarketplace.useQuery({});
 
   const activeMaterials = materials?.filter((m: { isActive: boolean }) => m.isActive).length || 0;
   const activeProducts = products?.filter((p: { isActive: boolean }) => p.isActive).length || 0;
@@ -35,6 +40,22 @@ export default function Home() {
     { title: "Simular Preço", description: "Calcule margem e CTM", icon: Calculator, href: "/simulador", gradient: "from-amber-500 to-orange-600" },
     { title: "Preço Mínimo", description: "Encontre o menor preço viável", icon: TrendingUp, href: "/preco-minimo", gradient: "from-rose-500 to-pink-600" },
   ];
+
+  // Prepare chart data
+  const productChartData = marginByProduct?.map((p: any) => ({
+    name: p.name?.substring(0, 15) || p.sku?.substring(0, 15),
+    margem: Number(p.marginPercent?.toFixed(1)) || 0,
+    valor: Number(p.marginValue?.toFixed(2)) || 0,
+  })) || [];
+
+  const marketplaceChartData = marginByMarketplace?.map((m: any, index: number) => ({
+    name: m.name,
+    value: Math.abs(Number(m.marginPercent?.toFixed(1)) || 0),
+    marginValue: Number(m.marginValue?.toFixed(2)) || 0,
+    fill: CHART_COLORS[index % CHART_COLORS.length],
+  })) || [];
+
+  const hasChartData = productChartData.length > 0 || marketplaceChartData.length > 0;
 
   return (
     <DashboardLayout>
@@ -73,6 +94,119 @@ export default function Home() {
             </Link>
           ))}
         </div>
+
+        {/* Charts Section */}
+        {hasChartData && (
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Margin by Product Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-primary" />
+                  Margem por Produto
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {productChartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={productChartData} margin={{ top: 10, right: 30, left: 0, bottom: 40 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis 
+                        dataKey="name" 
+                        tick={{ fontSize: 11 }} 
+                        angle={-45} 
+                        textAnchor="end"
+                        height={60}
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 12 }} 
+                        tickFormatter={(value) => `${value}%`}
+                      />
+                      <Tooltip 
+                        formatter={(value: number, name: string) => [
+                          name === "margem" ? `${value}%` : `R$ ${value.toFixed(2)}`,
+                          name === "margem" ? "Margem %" : "Valor R$"
+                        ]}
+                        contentStyle={{ 
+                          backgroundColor: "white", 
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "8px",
+                          boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)"
+                        }}
+                      />
+                      <Bar 
+                        dataKey="margem" 
+                        fill="#8b5cf6" 
+                        radius={[4, 4, 0, 0]}
+                        name="Margem %"
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                    <div className="text-center">
+                      <Boxes className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p>Cadastre produtos para ver o gráfico</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Margin by Marketplace Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <PieChart className="h-5 w-5 text-primary" />
+                  Margem por Marketplace
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {marketplaceChartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <RechartsPie>
+                      <Pie
+                        data={marketplaceChartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={2}
+                        dataKey="value"
+                        label={({ name, value }) => `${name}: ${value}%`}
+                        labelLine={false}
+                      >
+                        {marketplaceChartData.map((entry: any, index: number) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value: number, name: string, props: any) => [
+                          `${value}% (R$ ${props.payload.marginValue})`,
+                          "Margem"
+                        ]}
+                        contentStyle={{ 
+                          backgroundColor: "white", 
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "8px",
+                          boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)"
+                        }}
+                      />
+                      <Legend />
+                    </RechartsPie>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                    <div className="text-center">
+                      <Store className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p>Configure marketplaces para ver o gráfico</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         <div>
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2"><Zap className="h-5 w-5 text-primary" />Ações Rápidas</h2>
