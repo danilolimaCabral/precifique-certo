@@ -29,6 +29,13 @@
       "when": 1765931260162,
       "tag": "0003_petite_santa_claus",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1765932551726,
+      "tag": "0004_little_clint_barton",
+      "breakpoints": true
     }
   ]
 }

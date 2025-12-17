@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO plans (name, slug, description, priceMonthly, priceYearly, maxMaterials, maxProducts, maxMarketplaces, hasSimulator, hasReports, hasExport, hasPrioritySupport, sortOrder) VALUES\n('Gratuito', 'free', 'Ideal para começar a precificar seus produtos', 0.00, 0.00, 10, 5, 2, TRUE, FALSE, FALSE, FALSE, 1),\n('Básico', 'basic', 'Para pequenos vendedores em crescimento', 29.90, 299.00, 50, 25, 4, TRUE, FALSE, TRUE, FALSE, 2),\n('Profissional', 'pro', 'Para vendedores estabelecidos com múltiplos canais', 79.90, 799.00, 200, 100, 10, TRUE, TRUE, TRUE, FALSE, 3),\n('Enterprise', 'enterprise', 'Para grandes operações com necessidades avançadas', 199.90, 1999.00, -1, -1, -1, TRUE, TRUE, TRUE, TRUE, 4);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CoKcC9nrGmnRVN.e5cb2b17c667 --database 4s2RPQbUiLyDQzYKK4VQq2 --execute INSERT INTO plans (name, slug, description, priceMonthly, priceYearly, maxMaterials, maxProducts, maxMarketplaces, hasSimulator, hasReports, hasExport, hasPrioritySupport, sortOrder) VALUES\n('Gratuito', 'free', 'Ideal para começar a precificar seus produtos', 0.00, 0.00, 10, 5, 2, TRUE, FALSE, FALSE, FALSE, 1),\n('Básico', 'basic', 'Para pequenos vendedores em crescimento', 29.90, 299.00, 50, 25, 4, TRUE, FALSE, TRUE, FALSE, 2),\n('Profissional', 'pro', 'Para vendedores estabelecidos com múltiplos canais', 79.90, 799.00, 200, 100, 10, TRUE, TRUE, TRUE, FALSE, 3),\n('Enterprise', 'enterprise', 'Para grandes operações com necessidades avançadas', 199.90, 1999.00, -1, -1, -1, TRUE, TRUE, TRUE, TRUE, 4);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 61
+}

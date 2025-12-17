@@ -34,7 +34,8 @@ import {
   TrendingDown, 
   Sliders, 
   Settings,
-  Shield 
+  Shield,
+  Crown 
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -57,6 +58,8 @@ const menuItems = [
 const adminMenuItems = [
   { icon: Shield, label: "Administração", path: "/admin" },
 ];
+
+const planMenuItem = { icon: Crown, label: "Planos", path: "/planos" };
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
 const DEFAULT_WIDTH = 260;
@@ -287,12 +290,26 @@ function DashboardLayoutContent({
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     );
-                  })}
+                        })}
                 </>
               )}
+              {/* Link para Planos */}
+              <div className="my-2 mx-2 border-t border-border/50" />
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={location === planMenuItem.path}
+                  onClick={() => setLocation(planMenuItem.path)}
+                  tooltip={planMenuItem.label}
+                  className={`h-10 transition-all font-normal ${location === planMenuItem.path ? "bg-amber-500/10" : ""}`}
+                >
+                  <Crown
+                    className={`h-4 w-4 ${location === planMenuItem.path ? "text-amber-500" : "text-muted-foreground"}`}
+                  />
+                  <span className={location === planMenuItem.path ? "text-amber-500 font-medium" : ""}>{planMenuItem.label}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarContent>
-
           <SidebarFooter className="p-3 border-t border-border/50">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

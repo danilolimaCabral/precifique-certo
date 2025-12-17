@@ -91,3 +91,13 @@
 - [x] Adicionar botão na página de Administração para duplicar
 - [x] Permitir selecionar usuário de origem e destino
 - [x] Testes unitários para a funcionalidade (12 testes passando)
+
+## Sistema de Planos de Assinatura
+- [x] Criar tabela de planos no banco de dados
+- [x] Adicionar campo de plano na tabela de usuários
+- [x] Definir limites por plano (materiais, produtos, marketplaces)
+- [x] Criar página de planos e preços
+- [x] Implementar verificação de limites no backend
+- [x] Mostrar plano atual no perfil do usuário
+- [x] Bloquear funcionalidades quando limite atingido
+- [x] Criar página de upgrade de plano (integrada na página de Planos)

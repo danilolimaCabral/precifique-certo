@@ -1,6 +1,6 @@
 import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, materials, products, productMaterials, marketplaces, shippingRanges, settings, customCharges, pricingRecords, Material, Product, ProductMaterial, Marketplace, ShippingRange, Settings, CustomCharge, PricingRecord, InsertMaterial, InsertProduct, InsertProductMaterial, InsertMarketplace, InsertShippingRange, InsertSettings, InsertCustomCharge, InsertPricingRecord } from "../drizzle/schema";
+import { InsertUser, users, materials, products, productMaterials, marketplaces, shippingRanges, settings, customCharges, pricingRecords, plans, Material, Product, ProductMaterial, Marketplace, ShippingRange, Settings, CustomCharge, PricingRecord, Plan, InsertMaterial, InsertProduct, InsertProductMaterial, InsertMarketplace, InsertShippingRange, InsertSettings, InsertCustomCharge, InsertPricingRecord, InsertPlan } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import bcrypt from 'bcryptjs';
 import { nanoid } from 'nanoid';
@@ -428,4 +428,112 @@ export async function getUsersWithMarketplaces() {
   }
   
   return result;
+}
+
+
+// ============ PLANS ============
+export async function getPlans() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(plans).where(eq(plans.isActive, true)).orderBy(plans.sortOrder);
+}
+
+export async function getPlanById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(plans).where(eq(plans.id, id)).limit(1);
+  return result[0];
+}
+
+export async function getPlanBySlug(slug: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(plans).where(eq(plans.slug, slug)).limit(1);
+  return result[0];
+}
+
+export async function getUserPlan(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  if (!user[0] || !user[0].planId) {
+    // Return free plan by default
+    const freePlan = await db.select().from(plans).where(eq(plans.slug, "free")).limit(1);
+    return freePlan[0];
+  }
+  
+  const plan = await db.select().from(plans).where(eq(plans.id, user[0].planId)).limit(1);
+  return plan[0];
+}
+
+export async function updateUserPlan(userId: number, planId: number, expiresAt?: Date) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(users).set({ 
+    planId, 
+    planExpiresAt: expiresAt || null 
+  }).where(eq(users.id, userId));
+  
+  return getUserPlan(userId);
+}
+
+export async function checkPlanLimits(userId: number) {
+  const db = await getDb();
+  if (!db) return { canCreate: false, reason: "Database not available" };
+  
+  const plan = await getUserPlan(userId);
+  if (!plan) {
+    return { 
+      canCreateMaterial: true, 
+      canCreateProduct: true, 
+      canCreateMarketplace: true,
+      materialsUsed: 0,
+      productsUsed: 0,
+      marketplacesUsed: 0,
+      plan: null
+    };
+  }
+  
+  const userMaterials = await db.select().from(materials).where(eq(materials.userId, userId));
+  const userProducts = await db.select().from(products).where(eq(products.userId, userId));
+  const userMarketplaces = await db.select().from(marketplaces).where(eq(marketplaces.userId, userId));
+  
+  const materialsUsed = userMaterials.length;
+  const productsUsed = userProducts.length;
+  const marketplacesUsed = userMarketplaces.length;
+  
+  // -1 means unlimited
+  const canCreateMaterial = plan.maxMaterials === -1 || materialsUsed < plan.maxMaterials;
+  const canCreateProduct = plan.maxProducts === -1 || productsUsed < plan.maxProducts;
+  const canCreateMarketplace = plan.maxMarketplaces === -1 || marketplacesUsed < plan.maxMarketplaces;
+  
+  return {
+    canCreateMaterial,
+    canCreateProduct,
+    canCreateMarketplace,
+    materialsUsed,
+    productsUsed,
+    marketplacesUsed,
+    materialsLimit: plan.maxMaterials,
+    productsLimit: plan.maxProducts,
+    marketplacesLimit: plan.maxMarketplaces,
+    plan
+  };
+}
+
+// Admin: Get all plans for management
+export async function getAllPlans() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(plans).orderBy(plans.sortOrder);
+}
+
+// Admin: Update plan
+export async function updatePlan(id: number, data: Partial<InsertPlan>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(plans).set(data).where(eq(plans.id, id));
+  return getPlanById(id);
 }

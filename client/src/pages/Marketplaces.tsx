@@ -22,6 +22,7 @@ export default function Marketplaces() {
 
   const utils = trpc.useUtils();
   const { data: marketplaces, isLoading } = trpc.marketplaces.list.useQuery();
+  const { data: limits } = trpc.plans.myLimits.useQuery();
   const { data: shippingRanges, refetch: refetchShipping } = trpc.shippingRanges.list.useQuery(
     { marketplaceId: selectedMarketplace || 0 }, 
     { enabled: !!selectedMarketplace }
@@ -29,7 +30,8 @@ export default function Marketplaces() {
 
   const createMutation = trpc.marketplaces.create.useMutation({ 
     onSuccess: () => { 
-      utils.marketplaces.list.invalidate(); 
+      utils.marketplaces.list.invalidate();
+      utils.plans.myLimits.invalidate(); 
       setOpen(false); 
       resetForm(); 
       toast.success("Marketplace criado com sucesso!"); 
@@ -190,7 +192,16 @@ export default function Marketplaces() {
           </div>
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
             <DialogTrigger asChild>
-              <Button className="gap-2">
+              <Button 
+                className="gap-2"
+                disabled={limits && !limits.canCreateMarketplace}
+                onClick={() => {
+                  if (limits && !limits.canCreateMarketplace) {
+                    toast.error(`Limite atingido! Seu plano permite ${limits.marketplacesLimit} marketplaces. Faça upgrade para adicionar mais.`);
+                    return;
+                  }
+                }}
+              >
                 <Plus className="h-4 w-4" />
                 Novo Marketplace
               </Button>

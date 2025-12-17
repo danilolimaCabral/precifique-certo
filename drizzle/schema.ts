@@ -1,5 +1,28 @@
 import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, boolean } from "drizzle-orm/mysql-core";
 
+// Subscription Plans
+export const plans = mysqlTable("plans", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  slug: varchar("slug", { length: 50 }).notNull().unique(),
+  description: text("description"),
+  priceMonthly: decimal("priceMonthly", { precision: 10, scale: 2 }).notNull(),
+  priceYearly: decimal("priceYearly", { precision: 10, scale: 2 }),
+  maxMaterials: int("maxMaterials").notNull(),
+  maxProducts: int("maxProducts").notNull(),
+  maxMarketplaces: int("maxMarketplaces").notNull(),
+  hasSimulator: boolean("hasSimulator").default(true).notNull(),
+  hasReports: boolean("hasReports").default(false).notNull(),
+  hasExport: boolean("hasExport").default(false).notNull(),
+  hasPrioritySupport: boolean("hasPrioritySupport").default(false).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Plan = typeof plans.$inferSelect;
+export type InsertPlan = typeof plans.$inferInsert;
+
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
   openId: varchar("openId", { length: 64 }).notNull().unique(),
@@ -8,6 +31,8 @@ export const users = mysqlTable("users", {
   passwordHash: varchar("passwordHash", { length: 255 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  planId: int("planId"),
+  planExpiresAt: timestamp("planExpiresAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),

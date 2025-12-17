@@ -18,7 +18,8 @@ export default function Materiais() {
 
   const utils = trpc.useUtils();
   const { data: materials, isLoading } = trpc.materials.list.useQuery();
-  const createMutation = trpc.materials.create.useMutation({ onSuccess: () => { utils.materials.list.invalidate(); setOpen(false); resetForm(); toast.success("Material criado!"); } });
+  const { data: limits } = trpc.plans.myLimits.useQuery();
+  const createMutation = trpc.materials.create.useMutation({ onSuccess: () => { utils.materials.list.invalidate(); utils.plans.myLimits.invalidate(); setOpen(false); resetForm(); toast.success("Material criado!"); } });
   const updateMutation = trpc.materials.update.useMutation({ onSuccess: () => { utils.materials.list.invalidate(); setOpen(false); resetForm(); toast.success("Material atualizado!"); } });
   const deleteMutation = trpc.materials.delete.useMutation({ onSuccess: () => { utils.materials.list.invalidate(); toast.success("Material excluído!"); } });
 
@@ -51,7 +52,15 @@ export default function Materiais() {
           </div>
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
             <DialogTrigger asChild>
-              <Button><Plus className="h-4 w-4 mr-2" />Novo Material</Button>
+              <Button 
+                disabled={limits && !limits.canCreateMaterial}
+                onClick={() => {
+                  if (limits && !limits.canCreateMaterial) {
+                    toast.error(`Limite atingido! Seu plano permite ${limits.materialsLimit} materiais. Faça upgrade para adicionar mais.`);
+                    return;
+                  }
+                }}
+              ><Plus className="h-4 w-4 mr-2" />Novo Material</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>

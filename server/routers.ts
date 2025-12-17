@@ -69,6 +69,39 @@ export const appRouter = router({
       }
       return db.duplicateMarketplacesToUser(input.sourceUserId, input.targetUserId);
     }),
+    // Admin: Manage plans
+    getAllPlans: adminProcedure.query(async () => db.getAllPlans()),
+    updatePlan: adminProcedure.input(z.object({
+      id: z.number(),
+      name: z.string().optional(),
+      description: z.string().optional(),
+      priceMonthly: z.string().optional(),
+      priceYearly: z.string().optional(),
+      maxMaterials: z.number().optional(),
+      maxProducts: z.number().optional(),
+      maxMarketplaces: z.number().optional(),
+      isActive: z.boolean().optional(),
+    })).mutation(async ({ input }) => {
+      const { id, ...data } = input;
+      return db.updatePlan(id, data);
+    }),
+    updateUserPlan: adminProcedure.input(z.object({
+      userId: z.number(),
+      planId: z.number(),
+      expiresAt: z.string().optional(),
+    })).mutation(async ({ input }) => {
+      const expiresAt = input.expiresAt ? new Date(input.expiresAt) : undefined;
+      return db.updateUserPlan(input.userId, input.planId, expiresAt);
+    }),
+  }),
+
+  // Plans - Public
+  plans: router({
+    list: publicProcedure.query(async () => db.getPlans()),
+    get: publicProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => db.getPlanById(input.id)),
+    getBySlug: publicProcedure.input(z.object({ slug: z.string() })).query(async ({ input }) => db.getPlanBySlug(input.slug)),
+    myPlan: protectedProcedure.query(async ({ ctx }) => db.getUserPlan(ctx.user.id)),
+    myLimits: protectedProcedure.query(async ({ ctx }) => db.checkPlanLimits(ctx.user.id)),
   }),
 
   // Materials - Multi-tenant

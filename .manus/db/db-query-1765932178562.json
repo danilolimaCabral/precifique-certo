@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS plans (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  name VARCHAR(100) NOT NULL,\n  slug VARCHAR(50) NOT NULL UNIQUE,\n  description TEXT,\n  priceMonthly DECIMAL(10, 2) NOT NULL,\n  priceYearly DECIMAL(10, 2),\n  maxMaterials INT NOT NULL,\n  maxProducts INT NOT NULL,\n  maxMarketplaces INT NOT NULL,\n  hasSimulator BOOLEAN DEFAULT TRUE NOT NULL,\n  hasReports BOOLEAN DEFAULT FALSE NOT NULL,\n  hasExport BOOLEAN DEFAULT FALSE NOT NULL,\n  hasPrioritySupport BOOLEAN DEFAULT FALSE NOT NULL,\n  isActive BOOLEAN DEFAULT TRUE NOT NULL,\n  sortOrder INT DEFAULT 0 NOT NULL,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CoKcC9nrGmnRVN.e5cb2b17c667 --database 4s2RPQbUiLyDQzYKK4VQq2 --execute CREATE TABLE IF NOT EXISTS plans (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  name VARCHAR(100) NOT NULL,\n  slug VARCHAR(50) NOT NULL UNIQUE,\n  description TEXT,\n  priceMonthly DECIMAL(10, 2) NOT NULL,\n  priceYearly DECIMAL(10, 2),\n  maxMaterials INT NOT NULL,\n  maxProducts INT NOT NULL,\n  maxMarketplaces INT NOT NULL,\n  hasSimulator BOOLEAN DEFAULT TRUE NOT NULL,\n  hasReports BOOLEAN DEFAULT FALSE NOT NULL,\n  hasExport BOOLEAN DEFAULT FALSE NOT NULL,\n  hasPrioritySupport BOOLEAN DEFAULT FALSE NOT NULL,\n  isActive BOOLEAN DEFAULT TRUE NOT NULL,\n  sortOrder INT DEFAULT 0 NOT NULL,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 182
+}

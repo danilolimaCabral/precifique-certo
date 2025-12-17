@@ -22,9 +22,10 @@ export default function Produtos() {
   const utils = trpc.useUtils();
   const { data: products, isLoading } = trpc.products.list.useQuery();
   const { data: materials } = trpc.materials.list.useQuery();
+  const { data: limits } = trpc.plans.myLimits.useQuery();
   const { data: productMaterials } = trpc.productMaterials.list.useQuery({ productId: selectedProduct || 0 }, { enabled: !!selectedProduct });
 
-  const createMutation = trpc.products.create.useMutation({ onSuccess: () => { utils.products.list.invalidate(); setOpen(false); resetForm(); toast.success("Produto criado!"); } });
+  const createMutation = trpc.products.create.useMutation({ onSuccess: () => { utils.products.list.invalidate(); utils.plans.myLimits.invalidate(); setOpen(false); resetForm(); toast.success("Produto criado!"); } });
   const updateMutation = trpc.products.update.useMutation({ onSuccess: () => { utils.products.list.invalidate(); setOpen(false); resetForm(); toast.success("Produto atualizado!"); } });
   const deleteMutation = trpc.products.delete.useMutation({ onSuccess: () => { utils.products.list.invalidate(); toast.success("Produto excluído!"); } });
   const addBomMutation = trpc.productMaterials.add.useMutation({ onSuccess: () => { utils.productMaterials.list.invalidate(); setBomForm({ materialId: "", quantity: "" }); toast.success("Material adicionado!"); } });
@@ -73,7 +74,15 @@ export default function Produtos() {
           </div>
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
             <DialogTrigger asChild>
-              <Button><Plus className="h-4 w-4 mr-2" />Novo Produto</Button>
+              <Button 
+                disabled={limits && !limits.canCreateProduct}
+                onClick={() => {
+                  if (limits && !limits.canCreateProduct) {
+                    toast.error(`Limite atingido! Seu plano permite ${limits.productsLimit} produtos. Faça upgrade para adicionar mais.`);
+                    return;
+                  }
+                }}
+              ><Plus className="h-4 w-4 mr-2" />Novo Produto</Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
