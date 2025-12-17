@@ -169,3 +169,13 @@
 - [x] Validar campo obrigatório antes de salvar
 - [x] Integrar regime tributário com cálculos de precificação
 - [x] Testes unitários da funcionalidade (25 testes passando)
+
+## Gestão de Regimes Tributários (Admin)
+- [x] Adicionar seção de regimes tributários na página de Administração
+- [x] Listar todos os regimes (ativos e inativos)
+- [x] Formulário para adicionar novo regime
+- [x] Formulário para editar regime existente
+- [x] Botão para ativar/desativar regime
+- [x] Proteção para não excluir regimes do sistema
+- [x] Validação de campos obrigatórios
+- [x] 165 testes unitários passando

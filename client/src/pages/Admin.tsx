@@ -7,10 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Users, Shield, ShieldCheck, Store, Loader2, Copy, ArrowRight } from "lucide-react";
+import { Users, Shield, ShieldCheck, Store, Loader2, Copy, ArrowRight, Building2, Plus, Pencil, Trash2, Power, PowerOff } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 export default function Admin() {
   const { user } = useAuth();
@@ -19,8 +22,46 @@ export default function Admin() {
   const [sourceUserId, setSourceUserId] = useState<number | null>(null);
   const [targetUserId, setTargetUserId] = useState<number | null>(null);
   
+  // Tax Regimes state
+  const [regimeDialogOpen, setRegimeDialogOpen] = useState(false);
+  const [editingRegime, setEditingRegime] = useState<{ id: number; name: string; defaultRate: string } | null>(null);
+  const [regimeForm, setRegimeForm] = useState({ name: "", defaultRate: "" });
+  
   const { data: users, isLoading, refetch } = trpc.admin.listUsers.useQuery();
   const { data: usersWithMarketplaces, refetch: refetchWithMarketplaces } = trpc.admin.listUsersWithMarketplaces.useQuery();
+  
+  // Tax Regimes queries and mutations
+  const { data: taxRegimes, isLoading: isLoadingRegimes, refetch: refetchRegimes } = trpc.taxRegimes.listAll.useQuery();
+  
+  const createRegime = trpc.taxRegimes.create.useMutation({
+    onSuccess: () => {
+      toast.success("Regime tributário criado com sucesso!");
+      refetchRegimes();
+      closeRegimeDialog();
+    },
+    onError: (error) => toast.error(error.message || "Erro ao criar regime"),
+  });
+  
+  const updateRegime = trpc.taxRegimes.update.useMutation({
+    onSuccess: () => {
+      toast.success("Regime tributário atualizado com sucesso!");
+      refetchRegimes();
+      closeRegimeDialog();
+    },
+    onError: (error) => toast.error(error.message || "Erro ao atualizar regime"),
+  });
+  
+  const deleteRegime = trpc.taxRegimes.delete.useMutation({
+    onSuccess: (data) => {
+      if (data.success) {
+        toast.success("Regime tributário removido com sucesso!");
+        refetchRegimes();
+      } else {
+        toast.error(data.message || "Erro ao remover regime");
+      }
+    },
+    onError: (error) => toast.error(error.message || "Erro ao remover regime"),
+  });
   
   const updateRole = trpc.admin.updateUserRole.useMutation({
     onSuccess: () => {
@@ -69,6 +110,48 @@ export default function Admin() {
       return;
     }
     updateRole.mutate({ userId, role: newRole });
+  };
+
+  // Tax Regime handlers
+  const closeRegimeDialog = () => {
+    setRegimeDialogOpen(false);
+    setEditingRegime(null);
+    setRegimeForm({ name: "", defaultRate: "" });
+  };
+
+  const openCreateRegime = () => {
+    setEditingRegime(null);
+    setRegimeForm({ name: "", defaultRate: "" });
+    setRegimeDialogOpen(true);
+  };
+
+  const openEditRegime = (regime: { id: number; name: string; defaultRate: string }) => {
+    setEditingRegime(regime);
+    setRegimeForm({ name: regime.name, defaultRate: String(regime.defaultRate) });
+    setRegimeDialogOpen(true);
+  };
+
+  const handleRegimeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!regimeForm.name || !regimeForm.defaultRate) {
+      toast.error("Preencha todos os campos");
+      return;
+    }
+    if (editingRegime) {
+      updateRegime.mutate({ id: editingRegime.id, name: regimeForm.name, defaultRate: regimeForm.defaultRate });
+    } else {
+      createRegime.mutate({ name: regimeForm.name, defaultRate: regimeForm.defaultRate });
+    }
+  };
+
+  const handleToggleRegime = (id: number, currentStatus: boolean) => {
+    updateRegime.mutate({ id, isActive: !currentStatus });
+  };
+
+  const handleDeleteRegime = (id: number) => {
+    if (confirm("Tem certeza que deseja remover este regime tributário?")) {
+      deleteRegime.mutate({ id });
+    }
   };
 
   const handleDuplicate = () => {
@@ -345,6 +428,158 @@ export default function Admin() {
           </CardContent>
         </Card>
 
+        {/* Tax Regimes Management */}
+        <Card className="border-0 shadow-lg">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5 text-blue-500" />
+                  Regimes Tributários
+                </CardTitle>
+                <CardDescription>
+                  Gerencie os regimes tributários disponíveis no sistema. Regimes do sistema não podem ser removidos.
+                </CardDescription>
+              </div>
+              <Dialog open={regimeDialogOpen} onOpenChange={(open) => { if (!open) closeRegimeDialog(); else setRegimeDialogOpen(true); }}>
+                <DialogTrigger asChild>
+                  <Button onClick={openCreateRegime} className="gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600">
+                    <Plus className="h-4 w-4" />
+                    Novo Regime
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Building2 className="h-5 w-5 text-blue-500" />
+                      {editingRegime ? "Editar Regime Tributário" : "Novo Regime Tributário"}
+                    </DialogTitle>
+                    <DialogDescription>
+                      {editingRegime ? "Atualize as informações do regime tributário." : "Adicione um novo regime tributário ao sistema."}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleRegimeSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="regime-name">Nome do Regime</Label>
+                      <Input
+                        id="regime-name"
+                        value={regimeForm.name}
+                        onChange={(e) => setRegimeForm({ ...regimeForm, name: e.target.value })}
+                        placeholder="Ex: Simples Nacional, Lucro Presumido"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="regime-rate">Alíquota Padrão (%)</Label>
+                      <Input
+                        id="regime-rate"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        value={regimeForm.defaultRate}
+                        onChange={(e) => setRegimeForm({ ...regimeForm, defaultRate: e.target.value })}
+                        placeholder="Ex: 6.00"
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Esta alíquota será preenchida automaticamente quando o usuário selecionar este regime.
+                      </p>
+                    </div>
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={closeRegimeDialog}>
+                        Cancelar
+                      </Button>
+                      <Button type="submit" disabled={createRegime.isPending || updateRegime.isPending}>
+                        {(createRegime.isPending || updateRegime.isPending) ? (
+                          <><Loader2 className="h-4 w-4 animate-spin mr-2" />Salvando...</>
+                        ) : (
+                          editingRegime ? "Salvar Alterações" : "Criar Regime"
+                        )}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {isLoadingRegimes ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Alíquota Padrão</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {taxRegimes?.map((regime: any) => (
+                    <TableRow key={regime.id} className={!regime.isActive ? "opacity-50" : ""}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-blue-500" />
+                          {regime.name}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{regime.defaultRate}%</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={regime.isSystem ? "secondary" : "default"} className={regime.isSystem ? "" : "bg-green-500"}>
+                          {regime.isSystem ? "Sistema" : "Personalizado"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={regime.isActive ? "default" : "outline"} className={regime.isActive ? "bg-green-500" : ""}>
+                          {regime.isActive ? "Ativo" : "Inativo"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openEditRegime(regime)}
+                            title="Editar"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleToggleRegime(regime.id, regime.isActive)}
+                            title={regime.isActive ? "Desativar" : "Ativar"}
+                          >
+                            {regime.isActive ? <PowerOff className="h-4 w-4 text-amber-500" /> : <Power className="h-4 w-4 text-green-500" />}
+                          </Button>
+                          {!regime.isSystem && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteRegime(regime.id)}
+                              title="Remover"
+                              disabled={deleteRegime.isPending}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Info Card */}
         <Card className="border-0 shadow-md bg-gradient-to-br from-amber-50 to-white">
           <CardHeader>
@@ -362,6 +597,9 @@ export default function Admin() {
             </p>
             <p>
               <strong>Administradores:</strong> Podem acessar esta página para gerenciar permissões de outros usuários e duplicar configurações.
+            </p>
+            <p>
+              <strong>Regimes Tributários:</strong> Gerencie os regimes tributários disponíveis para todos os usuários. Regimes do sistema não podem ser removidos, apenas desativados.
             </p>
           </CardContent>
         </Card>
