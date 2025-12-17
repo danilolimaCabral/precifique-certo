@@ -15,6 +15,13 @@
       "when": 1765906935684,
       "tag": "0001_nosy_korg",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1765930761422,
+      "tag": "0002_new_thor_girl",
+      "breakpoints": true
     }
   ]
 }

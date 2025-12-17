@@ -2,6 +2,8 @@ import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, materials, products, productMaterials, marketplaces, shippingRanges, settings, customCharges, pricingRecords, Material, Product, ProductMaterial, Marketplace, ShippingRange, Settings, CustomCharge, PricingRecord, InsertMaterial, InsertProduct, InsertProductMaterial, InsertMarketplace, InsertShippingRange, InsertSettings, InsertCustomCharge, InsertPricingRecord } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import bcrypt from 'bcryptjs';
+import { nanoid } from 'nanoid';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -47,6 +49,62 @@ export async function getUserByOpenId(openId: string) {
   if (!db) { console.warn("[Database] Cannot get user: database not available"); return undefined; }
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
   return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) { console.warn("[Database] Cannot get user: database not available"); return undefined; }
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createUserWithPassword(data: { name: string; email: string; password: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Check if email already exists
+  const existingUser = await getUserByEmail(data.email);
+  if (existingUser) {
+    throw new Error("Email já cadastrado");
+  }
+  
+  // Hash password
+  const passwordHash = await bcrypt.hash(data.password, 10);
+  
+  // Generate unique openId for local users
+  const openId = `local_${nanoid(20)}`;
+  
+  const result = await db.insert(users).values({
+    openId,
+    name: data.name,
+    email: data.email,
+    passwordHash,
+    loginMethod: 'email',
+    role: 'user',
+    lastSignedIn: new Date(),
+  });
+  
+  return { id: result[0].insertId, openId, email: data.email, name: data.name };
+}
+
+export async function verifyUserPassword(email: string, password: string) {
+  const user = await getUserByEmail(email);
+  if (!user || !user.passwordHash) {
+    return null;
+  }
+  
+  const isValid = await bcrypt.compare(password, user.passwordHash);
+  if (!isValid) {
+    return null;
+  }
+  
+  // Update last signed in
+  const db = await getDb();
+  if (db) {
+    await db.update(users).set({ lastSignedIn: new Date() }).where(eq(users.id, user.id));
+  }
+  
+  return user;
 }
 
 // Materials

@@ -55,3 +55,11 @@
 - [x] Interface de edição de faixas na página Marketplaces
 - [x] Modal para adicionar/editar faixas de frete
 - [x] Botão para excluir faixas de frete
+
+## Sistema de Autenticação com Usuário e Senha
+- [x] Atualizar schema do banco para campo de senha (hash)
+- [x] Implementar procedure de registro com email/senha
+- [x] Implementar procedure de login com email/senha
+- [x] Criar página de login com formulário
+- [x] Criar página de cadastro/registro
+- [x] Integrar com sistema de sessão existente

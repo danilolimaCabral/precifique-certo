@@ -92,15 +92,33 @@ export default function DashboardLayout({
               Sistema de formação de preço e análise de custos para e-commerce. Faça login para continuar.
             </p>
           </div>
-          <Button
-            onClick={() => {
-              window.location.href = getLoginUrl();
-            }}
-            size="lg"
-            className="w-full shadow-lg hover:shadow-xl transition-all"
-          >
-            Entrar
-          </Button>
+          <div className="w-full space-y-3">
+            <Button
+              onClick={() => {
+                window.location.href = "/login";
+              }}
+              size="lg"
+              className="w-full shadow-lg hover:shadow-xl transition-all"
+            >
+              Entrar com Email
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                window.location.href = getLoginUrl();
+              }}
+              size="lg"
+              className="w-full"
+            >
+              Entrar com Google
+            </Button>
+            <p className="text-center text-sm text-muted-foreground">
+              Não tem conta?{" "}
+              <a href="/cadastro" className="text-primary hover:underline font-medium">
+                Criar conta
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     );

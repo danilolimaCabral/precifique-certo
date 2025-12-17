@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
+import { sdk } from "./_core/sdk";
 
 export const appRouter = router({
   system: systemRouter,
@@ -13,6 +14,57 @@ export const appRouter = router({
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
+    }),
+    register: publicProcedure.input(z.object({
+      name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+      email: z.string().email("Email inválido"),
+      password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+    })).mutation(async ({ input, ctx }) => {
+      try {
+        const user = await db.createUserWithPassword(input);
+        
+        // Create session token
+        const sessionToken = await sdk.createSessionToken(user.openId, {
+          name: user.name,
+          expiresInMs: 365 * 24 * 60 * 60 * 1000, // 1 year
+        });
+        
+        // Set cookie
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, {
+          ...cookieOptions,
+          maxAge: 365 * 24 * 60 * 60 * 1000,
+        });
+        
+        return { success: true, user: { id: user.id, name: user.name, email: user.email } };
+      } catch (error: any) {
+        throw new Error(error.message || "Erro ao criar conta");
+      }
+    }),
+    login: publicProcedure.input(z.object({
+      email: z.string().email("Email inválido"),
+      password: z.string().min(1, "Senha é obrigatória"),
+    })).mutation(async ({ input, ctx }) => {
+      const user = await db.verifyUserPassword(input.email, input.password);
+      
+      if (!user) {
+        throw new Error("Email ou senha incorretos");
+      }
+      
+      // Create session token
+      const sessionToken = await sdk.createSessionToken(user.openId, {
+        name: user.name || "",
+        expiresInMs: 365 * 24 * 60 * 60 * 1000, // 1 year
+      });
+      
+      // Set cookie
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.cookie(COOKIE_NAME, sessionToken, {
+        ...cookieOptions,
+        maxAge: 365 * 24 * 60 * 60 * 1000,
+      });
+      
+      return { success: true, user: { id: user.id, name: user.name, email: user.email } };
     }),
   }),
 

@@ -14,6 +14,8 @@ import Precificacao from "./pages/Precificacao";
 import PrecoMinimo from "./pages/PrecoMinimo";
 import Simulador from "./pages/Simulador";
 import Configuracoes from "./pages/Configuracoes";
+import Login from "./pages/Login";
+import Cadastro from "./pages/Cadastro";
 
 function Router() {
   return (
@@ -28,6 +30,8 @@ function Router() {
       <Route path="/preco-minimo" component={PrecoMinimo} />
       <Route path="/simulador" component={Simulador} />
       <Route path="/configuracoes" component={Configuracoes} />
+      <Route path="/login" component={Login} />
+      <Route path="/cadastro" component={Cadastro} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
