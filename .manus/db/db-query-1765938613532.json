@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `mlCredentials` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`userId` int NOT NULL,\n\t`clientId` varchar(255),\n\t`clientSecret` varchar(255),\n\t`accessToken` text,\n\t`refreshToken` text,\n\t`tokenExpiresAt` timestamp NULL,\n\t`lastSyncAt` timestamp NULL,\n\t`isConnected` boolean NOT NULL DEFAULT false,\n\t`createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n\t`updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n\tCONSTRAINT `mlCredentials_id` PRIMARY KEY(`id`),\n\tCONSTRAINT `mlCredentials_userId_unique` UNIQUE(`userId`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CoKcC9nrGmnRVN.e5cb2b17c667 --database 4s2RPQbUiLyDQzYKK4VQq2 --execute CREATE TABLE IF NOT EXISTS `mlCredentials` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`userId` int NOT NULL,\n\t`clientId` varchar(255),\n\t`clientSecret` varchar(255),\n\t`accessToken` text,\n\t`refreshToken` text,\n\t`tokenExpiresAt` timestamp NULL,\n\t`lastSyncAt` timestamp NULL,\n\t`isConnected` boolean NOT NULL DEFAULT false,\n\t`createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n\t`updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n\tCONSTRAINT `mlCredentials_id` PRIMARY KEY(`id`),\n\tCONSTRAINT `mlCredentials_userId_unique` UNIQUE(`userId`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 195
+}

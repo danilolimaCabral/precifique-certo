@@ -425,6 +425,161 @@ export const appRouter = router({
     }),
   }),
 
+  // Mercado Livre Integration
+  mercadoLivre: router({
+    // Get ML credentials status
+    getStatus: protectedProcedure.query(async ({ ctx }) => {
+      const credentials = await db.getMlCredentials(ctx.user.id);
+      if (!credentials) {
+        return { isConfigured: false, isConnected: false };
+      }
+      return {
+        isConfigured: !!credentials.clientId && !!credentials.clientSecret,
+        isConnected: credentials.isConnected,
+        lastSyncAt: credentials.lastSyncAt,
+      };
+    }),
+
+    // Save ML app credentials
+    saveCredentials: protectedProcedure.input(z.object({
+      clientId: z.string().min(1, "Client ID é obrigatório"),
+      clientSecret: z.string().min(1, "Client Secret é obrigatório"),
+    })).mutation(async ({ input, ctx }) => {
+      return db.saveMlCredentials(ctx.user.id, input);
+    }),
+
+    // Get authorization URL for OAuth flow
+    getAuthUrl: protectedProcedure.input(z.object({
+      redirectUri: z.string(),
+    })).query(async ({ input, ctx }) => {
+      const credentials = await db.getMlCredentials(ctx.user.id);
+      if (!credentials?.clientId) {
+        throw new Error("Configure as credenciais do Mercado Livre primeiro");
+      }
+      const { getAuthorizationUrl } = await import("./mercadolivre");
+      const state = `user_${ctx.user.id}_${Date.now()}`;
+      return {
+        url: getAuthorizationUrl(credentials.clientId, input.redirectUri, state),
+        state,
+      };
+    }),
+
+    // Exchange authorization code for tokens
+    exchangeCode: protectedProcedure.input(z.object({
+      code: z.string(),
+      redirectUri: z.string(),
+    })).mutation(async ({ input, ctx }) => {
+      const credentials = await db.getMlCredentials(ctx.user.id);
+      if (!credentials?.clientId || !credentials?.clientSecret) {
+        throw new Error("Credenciais do Mercado Livre não configuradas");
+      }
+      const { exchangeCodeForToken } = await import("./mercadolivre");
+      const tokens = await exchangeCodeForToken(
+        credentials.clientId,
+        credentials.clientSecret,
+        input.code,
+        input.redirectUri
+      );
+      await db.saveMlTokens(ctx.user.id, {
+        accessToken: tokens.access_token,
+        refreshToken: tokens.refresh_token,
+        expiresIn: tokens.expires_in,
+      });
+      return { success: true };
+    }),
+
+    // Disconnect ML account
+    disconnect: protectedProcedure.mutation(async ({ ctx }) => {
+      return db.disconnectMl(ctx.user.id);
+    }),
+
+    // Delete ML credentials
+    deleteCredentials: protectedProcedure.mutation(async ({ ctx }) => {
+      return db.deleteMlCredentials(ctx.user.id);
+    }),
+
+    // Get current commissions from ML
+    getCommissions: protectedProcedure.input(z.object({
+      referencePrice: z.number().optional(),
+    })).query(async ({ input, ctx }) => {
+      const credentials = await db.getMlCredentials(ctx.user.id);
+      if (!credentials?.accessToken) {
+        throw new Error("Conecte sua conta do Mercado Livre primeiro");
+      }
+      const { getListingPrices } = await import("./mercadolivre");
+      const prices = await getListingPrices(
+        credentials.accessToken,
+        input.referencePrice || 100
+      );
+      return prices.map(p => ({
+        listingTypeId: p.listing_type_id,
+        listingTypeName: p.listing_type_name,
+        commissionPercent: p.sale_fee_details?.percentage_fee || 0,
+        fixedFee: p.sale_fee_details?.fixed_fee || 0,
+        exposure: p.listing_exposure,
+      }));
+    }),
+
+    // Sync commissions to marketplaces
+    syncCommissions: protectedProcedure.input(z.object({
+      referencePrice: z.number().optional(),
+    })).mutation(async ({ input, ctx }) => {
+      const userId = ctx.user.id;
+      const credentials = await db.getMlCredentials(userId);
+      if (!credentials?.accessToken) {
+        throw new Error("Conecte sua conta do Mercado Livre primeiro");
+      }
+      
+      const { getListingPrices, mapListingTypeToMarketplace } = await import("./mercadolivre");
+      const prices = await getListingPrices(
+        credentials.accessToken,
+        input.referencePrice || 100
+      );
+      
+      const userMarketplaces = await db.getMarketplaces(userId);
+      let updated = 0;
+      const updates: Array<{ name: string; oldCommission: number; newCommission: number }> = [];
+      
+      for (const price of prices) {
+        if (price.listing_type_id !== "gold_pro" && price.listing_type_id !== "gold_special") continue;
+        
+        const mlName = mapListingTypeToMarketplace(price.listing_type_id);
+        const marketplace = userMarketplaces.find(m => 
+          m.name.toLowerCase().includes("mercado livre") &&
+          (price.listing_type_id === "gold_pro" 
+            ? m.name.toLowerCase().includes("premium") 
+            : m.name.toLowerCase().includes("clássico") || m.name.toLowerCase().includes("classico"))
+        );
+        
+        if (marketplace) {
+          const oldCommission = parseFloat(marketplace.commissionPercent as string || "0");
+          const newCommission = price.sale_fee_details?.percentage_fee || 0;
+          const fixedFee = price.sale_fee_details?.fixed_fee || 0;
+          
+          await db.updateMarketplace(marketplace.id, {
+            commissionPercent: newCommission.toString(),
+            fixedFee: fixedFee.toString(),
+          }, userId);
+          
+          updates.push({
+            name: marketplace.name,
+            oldCommission,
+            newCommission,
+          });
+          updated++;
+        }
+      }
+      
+      await db.updateMlLastSync(userId);
+      
+      return {
+        success: true,
+        updated,
+        updates,
+      };
+    }),
+  }),
+
   // Analytics - Dashboard charts data
   analytics: router({
     marginByProduct: protectedProcedure.input(z.object({

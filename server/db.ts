@@ -718,3 +718,81 @@ export async function getProductBySku(sku: string, userId: number) {
     .limit(1);
   return result[0];
 }
+
+
+// ============ MERCADO LIVRE INTEGRATION ============
+import { mlCredentials, MlCredential, InsertMlCredential } from "../drizzle/schema";
+
+export async function getMlCredentials(userId: number): Promise<MlCredential | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(mlCredentials).where(eq(mlCredentials.userId, userId)).limit(1);
+  return result[0];
+}
+
+export async function saveMlCredentials(userId: number, data: { clientId: string; clientSecret: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const existing = await getMlCredentials(userId);
+  if (existing) {
+    await db.update(mlCredentials).set({
+      clientId: data.clientId,
+      clientSecret: data.clientSecret,
+    }).where(eq(mlCredentials.userId, userId));
+  } else {
+    await db.insert(mlCredentials).values({
+      userId,
+      clientId: data.clientId,
+      clientSecret: data.clientSecret,
+    });
+  }
+  return getMlCredentials(userId);
+}
+
+export async function saveMlTokens(userId: number, tokens: { accessToken: string; refreshToken: string; expiresIn: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const expiresAt = new Date(Date.now() + tokens.expiresIn * 1000);
+  
+  await db.update(mlCredentials).set({
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+    tokenExpiresAt: expiresAt,
+    isConnected: true,
+  }).where(eq(mlCredentials.userId, userId));
+  
+  return getMlCredentials(userId);
+}
+
+export async function updateMlLastSync(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(mlCredentials).set({
+    lastSyncAt: new Date(),
+  }).where(eq(mlCredentials.userId, userId));
+}
+
+export async function disconnectMl(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(mlCredentials).set({
+    accessToken: null,
+    refreshToken: null,
+    tokenExpiresAt: null,
+    isConnected: false,
+  }).where(eq(mlCredentials.userId, userId));
+  
+  return { success: true };
+}
+
+export async function deleteMlCredentials(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(mlCredentials).where(eq(mlCredentials.userId, userId));
+  return { success: true };
+}

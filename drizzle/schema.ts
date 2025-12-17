@@ -169,3 +169,21 @@ export const pricingRecords = mysqlTable("pricingRecords", {
 
 export type PricingRecord = typeof pricingRecords.$inferSelect;
 export type InsertPricingRecord = typeof pricingRecords.$inferInsert;
+
+// Mercado Livre Integration - Multi-tenant
+export const mlCredentials = mysqlTable("mlCredentials", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(), // One credential per user
+  clientId: varchar("clientId", { length: 255 }),
+  clientSecret: varchar("clientSecret", { length: 255 }),
+  accessToken: text("accessToken"),
+  refreshToken: text("refreshToken"),
+  tokenExpiresAt: timestamp("tokenExpiresAt"),
+  lastSyncAt: timestamp("lastSyncAt"),
+  isConnected: boolean("isConnected").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MlCredential = typeof mlCredentials.$inferSelect;
+export type InsertMlCredential = typeof mlCredentials.$inferInsert;

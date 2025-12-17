@@ -36,7 +36,8 @@ import {
   Settings,
   Shield,
   Crown,
-  Upload 
+  Upload,
+  Link2
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -55,6 +56,7 @@ const menuItems = [
   { icon: Sliders, label: "Simulador", path: "/simulador" },
   { icon: Settings, label: "Configurações", path: "/configuracoes" },
   { icon: Upload, label: "Importar", path: "/importar" },
+  { icon: Link2, label: "Mercado Livre", path: "/mercado-livre" },
 ];
 
 const adminMenuItems = [

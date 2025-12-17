@@ -19,6 +19,8 @@ import Cadastro from "./pages/Cadastro";
 import Admin from "./pages/Admin";
 import Planos from "./pages/Planos";
 import Importar from "./pages/Importar";
+import MercadoLivre from "./pages/MercadoLivre";
+import MlCallback from "./pages/MlCallback";
 
 function Router() {
   return (
@@ -38,6 +40,8 @@ function Router() {
       <Route path="/admin" component={Admin} />
       <Route path="/planos" component={Planos} />
       <Route path="/importar" component={Importar} />
+      <Route path="/mercado-livre" component={MercadoLivre} />
+      <Route path="/ml-callback" component={MlCallback} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

@@ -143,3 +143,14 @@
 - [x] Criar usuário local admin (admin@precifiquecerto.com)
 - [x] Remover autenticação OAuth do Manus
 - [x] Deixar apenas login com email/senha
+
+## Integração Mercado Livre
+- [x] Pesquisar API do Mercado Livre para comissões
+- [x] Implementar serviço de integração no backend (mercadolivre.ts)
+- [x] Criar tabela mlCredentials no banco de dados
+- [x] Criar rotas tRPC (getStatus, saveCredentials, exchangeCode, syncCommissions)
+- [x] Criar interface para configurar credenciais ML
+- [x] Implementar sincronização automática de comissões
+- [x] Criar página de callback OAuth
+- [x] Adicionar link no menu lateral
+- [x] Testes unitários da integração (14 testes passando)
