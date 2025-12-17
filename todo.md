@@ -75,3 +75,12 @@
 - [x] Garantir isolamento de dados entre clientes
 - [x] Cada novo usuário começa com dados zerados (sem dados de outros tenants)
 - [x] 60 testes unitários passando (incluindo 9 testes de multi-tenant)
+
+## Bugs a Corrigir
+- [x] Coluna userId não existe na tabela settings - adicionar coluna
+
+## Melhorias Multi-Cliente
+- [x] Botão de cadastro sempre visível na página de login
+- [x] Link para cadastro no DashboardLayout quando não logado
+- [x] Página de boas-vindas para novos usuários
+- [x] Garantir que novos usuários comecem com dados zerados

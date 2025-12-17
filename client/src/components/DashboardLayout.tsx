@@ -94,16 +94,43 @@ export default function DashboardLayout({
               PRECIFIQUE CERTO
             </h1>
             <p className="text-sm text-muted-foreground text-center max-w-sm">
-              Sistema de formação de preço e análise de custos para e-commerce. Faça login para continuar.
+              Sistema de formação de preço e análise de custos para e-commerce.
             </p>
           </div>
+          
+          {/* Destaque para Cadastro */}
+          <div className="w-full p-4 rounded-xl bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
+            <p className="text-center text-sm font-medium text-green-700 mb-3">
+              Novo por aqui? Crie sua conta grátis!
+            </p>
+            <Button
+              onClick={() => {
+                window.location.href = "/cadastro";
+              }}
+              size="lg"
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg hover:shadow-xl transition-all"
+            >
+              Criar Conta Grátis
+            </Button>
+          </div>
+          
+          <div className="relative w-full">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t"></div>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">Já tem conta?</span>
+            </div>
+          </div>
+          
           <div className="w-full space-y-3">
             <Button
               onClick={() => {
                 window.location.href = "/login";
               }}
               size="lg"
-              className="w-full shadow-lg hover:shadow-xl transition-all"
+              variant="outline"
+              className="w-full"
             >
               Entrar com Email
             </Button>
@@ -117,12 +144,6 @@ export default function DashboardLayout({
             >
               Entrar com Google
             </Button>
-            <p className="text-center text-sm text-muted-foreground">
-              Não tem conta?{" "}
-              <a href="/cadastro" className="text-primary hover:underline font-medium">
-                Criar conta
-              </a>
-            </p>
           </div>
         </div>
       </div>
