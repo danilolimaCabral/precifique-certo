@@ -132,3 +132,8 @@
 
 ## Gráfico de Lucro por Marketplace
 - [x] Adicionar gráfico de barras comparando lucro total por marketplace no Dashboard
+
+## Correção Autenticação Local
+- [x] Verificar e corrigir registro de usuário com email/senha - FUNCIONANDO
+- [x] Verificar e corrigir login com email/senha - FUNCIONANDO
+- [x] Garantir criação correta de sessão após login local - FUNCIONANDO
