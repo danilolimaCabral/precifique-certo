@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO `shippingRanges` (`marketplaceId`, `minWeight`, `maxWeight`, `cost`) VALUES \n(2, 0, 300, 15.90),\n(2, 301, 500, 17.90),\n(2, 501, 1000, 19.90),\n(2, 1001, 2000, 24.90),\n(2, 2001, 5000, 32.90),\n(2, 5001, 9000, 42.90),\n(2, 9001, 13000, 52.90),\n(2, 13001, 30000, 72.90);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CoKcC9nrGmnRVN.e5cb2b17c667 --database 4s2RPQbUiLyDQzYKK4VQq2 --execute INSERT INTO `shippingRanges` (`marketplaceId`, `minWeight`, `maxWeight`, `cost`) VALUES \n(2, 0, 300, 15.90),\n(2, 301, 500, 17.90),\n(2, 501, 1000, 19.90),\n(2, 1001, 2000, 24.90),\n(2, 2001, 5000, 32.90),\n(2, 5001, 9000, 42.90),\n(2, 9001, 13000, 52.90),\n(2, 13001, 30000, 72.90);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 55
+}

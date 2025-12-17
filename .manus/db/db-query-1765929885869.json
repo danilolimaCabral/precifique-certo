@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO `marketplaces` (`name`, `commissionPercent`, `fixedFee`, `logisticsType`, `freeShipping`, `isActive`, `userId`) VALUES \n('Mercado Livre - Clássico', 11.00, 6.00, 'Mercado Envios', false, true, 1),\n('Mercado Livre - Premium', 16.00, 6.00, 'Mercado Envios Full', false, true, 1),\n('Shopee', 14.00, 2.00, 'Shopee Envios', false, true, 1),\n('Magalu', 16.00, 0.00, 'Magalu Entregas', false, true, 1),\n('Amazon DBA', 15.00, 0.00, 'DBA - Delivery by Amazon', false, true, 1),\n('Amazon FBA', 20.00, 0.00, 'FBA - Fulfillment by Amazon', false, true, 1);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CoKcC9nrGmnRVN.e5cb2b17c667 --database 4s2RPQbUiLyDQzYKK4VQq2 --execute INSERT INTO `marketplaces` (`name`, `commissionPercent`, `fixedFee`, `logisticsType`, `freeShipping`, `isActive`, `userId`) VALUES \n('Mercado Livre - Clássico', 11.00, 6.00, 'Mercado Envios', false, true, 1),\n('Mercado Livre - Premium', 16.00, 6.00, 'Mercado Envios Full', false, true, 1),\n('Shopee', 14.00, 2.00, 'Shopee Envios', false, true, 1),\n('Magalu', 16.00, 0.00, 'Magalu Entregas', false, true, 1),\n('Amazon DBA', 15.00, 0.00, 'DBA - Delivery by Amazon', false, true, 1),\n('Amazon FBA', 20.00, 0.00, 'FBA - Fulfillment by Amazon', false, true, 1);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 73
+}

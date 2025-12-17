@@ -1,0 +1,34 @@
+{
+  "query": "SELECT id, name FROM marketplaces;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CoKcC9nrGmnRVN.e5cb2b17c667 --database 4s2RPQbUiLyDQzYKK4VQq2 --execute SELECT id, name FROM marketplaces;",
+  "rows": [
+    {
+      "id": "30001",
+      "name": "Mercado Livre - Clássico"
+    },
+    {
+      "id": "30002",
+      "name": "Mercado Livre - Premium"
+    },
+    {
+      "id": "30003",
+      "name": "Shopee"
+    },
+    {
+      "id": "30004",
+      "name": "Magalu"
+    },
+    {
+      "id": "30005",
+      "name": "Amazon DBA"
+    },
+    {
+      "id": "30006",
+      "name": "Amazon FBA"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n30001\tMercado Livre - Clássico\n30002\tMercado Livre - Premium\n30003\tShopee\n30004\tMagalu\n30005\tAmazon DBA\n30006\tAmazon FBA\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

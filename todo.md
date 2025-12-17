@@ -40,3 +40,12 @@
 
 ## Bugs
 - [x] Tabela settings não existe no banco de dados - executar migração
+
+## Pré-cadastros
+- [x] Cadastrar Mercado Livre com comissões reais
+- [x] Cadastrar Shopee com comissões reais
+- [x] Cadastrar Magalu com comissões reais
+- [x] Cadastrar Amazon DBA com comissões reais
+- [x] Cadastrar Amazon FBA com comissões reais
+- [x] Configurar faixas de frete para cada marketplace
+- [x] Ajustar configurações fiscais padrão (Simples Nacional)
