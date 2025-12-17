@@ -179,3 +179,16 @@
 - [x] Proteção para não excluir regimes do sistema
 - [x] Validação de campos obrigatórios
 - [x] 165 testes unitários passando
+
+
+## Módulo de Análise de Venda (Padrão ML)
+- [x] Analisar estrutura de valores do Mercado Livre
+- [x] Criar página de Análise de Venda com breakdown completo
+- [x] Implementar campos: Preço do Produto, Tarifa de Venda Total, Envios, Custo do Produto, Imposto do Produto
+- [x] Calcular Margem de Contribuição (valor e %)
+- [x] Exibir Total da venda
+- [x] Suportar múltiplas unidades vendidas
+- [x] Layout similar ao painel do ML (coluna direita com resumo)
+- [x] Integrar com produtos e marketplaces cadastrados
+- [x] Testes unitários (14 testes passando)
+- [x] 179 testes unitários totais passando

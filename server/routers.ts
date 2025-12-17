@@ -135,6 +135,16 @@ export const appRouter = router({
   // Products - Multi-tenant
   products: router({
     list: protectedProcedure.query(async ({ ctx }) => db.getProducts(ctx.user.id)),
+    listWithCost: protectedProcedure.query(async ({ ctx }) => {
+      const products = await db.getProducts(ctx.user.id);
+      const productsWithCost = await Promise.all(
+        products.map(async (p) => ({
+          ...p,
+          totalCost: await db.calculateProductCost(p.id, ctx.user.id),
+        }))
+      );
+      return productsWithCost;
+    }),
     get: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ input, ctx }) => db.getProductById(input.id, ctx.user.id)),
     create: protectedProcedure.input(z.object({
       sku: z.string(),
