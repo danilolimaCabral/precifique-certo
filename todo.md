@@ -110,3 +110,12 @@
 - [x] Bloquear funcionalidades quando trial expirar
 - [x] Botão para iniciar trial na página de planos
 - [x] Testes unitários para a funcionalidade de trial (15 testes passando)
+
+## Importação em Massa via Excel
+- [x] Analisar estrutura da planilha ICOMMPRECIFIQUE2.xlsx
+- [x] Adicionar campos adicionais no schema (dimensões, peso, referência frete) - já existem
+- [x] Criar parser de Excel no backend
+- [x] Criar página de importação com upload de arquivo
+- [x] Validar dados antes de importar
+- [x] Importar materiais, produtos e BOM em lote
+- [x] Testes unitários para importação (13 testes passando)

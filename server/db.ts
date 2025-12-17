@@ -667,3 +667,54 @@ export async function checkPlanLimitsWithTrial(userId: number) {
     trial: trialStatus
   };
 }
+
+
+// ============ BULK IMPORT ============
+export async function bulkCreateMaterials(data: InsertMaterial[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  if (data.length === 0) return { count: 0 };
+  
+  await db.insert(materials).values(data);
+  return { count: data.length };
+}
+
+export async function bulkCreateProducts(data: InsertProduct[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  if (data.length === 0) return { count: 0 };
+  
+  const result = await db.insert(products).values(data);
+  // Return the IDs of inserted products
+  const insertedProducts = await db.select().from(products)
+    .where(eq(products.userId, data[0].userId))
+    .orderBy(products.id);
+  return { count: data.length, products: insertedProducts };
+}
+
+export async function bulkCreateProductMaterials(data: InsertProductMaterial[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  if (data.length === 0) return { count: 0 };
+  
+  await db.insert(productMaterials).values(data);
+  return { count: data.length };
+}
+
+export async function getMaterialBySku(sku: string, userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(materials)
+    .where(and(eq(materials.sku, sku), eq(materials.userId, userId)))
+    .limit(1);
+  return result[0];
+}
+
+export async function getProductBySku(sku: string, userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(products)
+    .where(and(eq(products.sku, sku), eq(products.userId, userId)))
+    .limit(1);
+  return result[0];
+}

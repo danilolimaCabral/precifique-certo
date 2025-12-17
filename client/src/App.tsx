@@ -18,6 +18,7 @@ import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import Admin from "./pages/Admin";
 import Planos from "./pages/Planos";
+import Importar from "./pages/Importar";
 
 function Router() {
   return (
@@ -36,6 +37,7 @@ function Router() {
       <Route path="/cadastro" component={Cadastro} />
       <Route path="/admin" component={Admin} />
       <Route path="/planos" component={Planos} />
+      <Route path="/importar" component={Importar} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

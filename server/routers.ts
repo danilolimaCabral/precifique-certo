@@ -366,6 +366,64 @@ export const appRouter = router({
       };
     }),
   }),
+
+  // Import - Bulk import from Excel
+  import: router({
+    materials: protectedProcedure.input(z.object({
+      materials: z.array(z.object({
+        sku: z.string(),
+        description: z.string(),
+        type: z.enum(["insumo", "embalagem"]),
+        unitCost: z.string(),
+      })),
+    })).mutation(async ({ input, ctx }) => {
+      const userId = ctx.user.id;
+      const data = input.materials.map(m => ({ ...m, userId, isActive: true }));
+      return db.bulkCreateMaterials(data);
+    }),
+
+    products: protectedProcedure.input(z.object({
+      products: z.array(z.object({
+        sku: z.string(),
+        name: z.string(),
+        height: z.string().optional(),
+        width: z.string().optional(),
+        length: z.string().optional(),
+        realWeight: z.string().optional(),
+      })),
+    })).mutation(async ({ input, ctx }) => {
+      const userId = ctx.user.id;
+      const data = input.products.map(p => ({ ...p, userId, isActive: true }));
+      return db.bulkCreateProducts(data);
+    }),
+
+    productMaterials: protectedProcedure.input(z.object({
+      items: z.array(z.object({
+        productSku: z.string(),
+        materialSku: z.string(),
+        quantity: z.string(),
+      })),
+    })).mutation(async ({ input, ctx }) => {
+      const userId = ctx.user.id;
+      const data: Array<{ userId: number; productId: number; materialId: number; quantity: string }> = [];
+      
+      for (const item of input.items) {
+        const product = await db.getProductBySku(item.productSku, userId);
+        const material = await db.getMaterialBySku(item.materialSku, userId);
+        
+        if (product && material) {
+          data.push({
+            userId,
+            productId: product.id,
+            materialId: material.id,
+            quantity: item.quantity,
+          });
+        }
+      }
+      
+      return db.bulkCreateProductMaterials(data);
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
