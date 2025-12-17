@@ -356,3 +356,76 @@ export async function getShippingCost(marketplaceId: number, weight: number, use
   }
   return 0;
 }
+
+
+// ============ ADMIN: DUPLICATE MARKETPLACES ============
+export async function duplicateMarketplacesToUser(sourceUserId: number, targetUserId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Get all marketplaces from source user
+  const sourceMarketplaces = await db.select().from(marketplaces).where(eq(marketplaces.userId, sourceUserId));
+  
+  if (sourceMarketplaces.length === 0) {
+    return { success: false, message: "Usuário de origem não possui marketplaces cadastrados" };
+  }
+  
+  let duplicatedCount = 0;
+  let shippingRangesCount = 0;
+  
+  for (const mp of sourceMarketplaces) {
+    // Create new marketplace for target user
+    const newMarketplace = await db.insert(marketplaces).values({
+      userId: targetUserId,
+      name: mp.name,
+      commissionPercent: mp.commissionPercent,
+      fixedFee: mp.fixedFee,
+      logisticsType: mp.logisticsType,
+      isActive: mp.isActive,
+    });
+    
+    const newMarketplaceId = newMarketplace[0].insertId;
+    duplicatedCount++;
+    
+    // Get shipping ranges from source marketplace
+    const sourceRanges = await db.select().from(shippingRanges).where(eq(shippingRanges.marketplaceId, mp.id));
+    
+    // Duplicate shipping ranges
+    for (const range of sourceRanges) {
+      await db.insert(shippingRanges).values({
+        userId: targetUserId,
+        marketplaceId: newMarketplaceId,
+        minWeight: range.minWeight,
+        maxWeight: range.maxWeight,
+        cost: range.cost,
+      });
+      shippingRangesCount++;
+    }
+  }
+  
+  return { 
+    success: true, 
+    message: `${duplicatedCount} marketplace(s) e ${shippingRangesCount} faixa(s) de frete duplicados com sucesso`,
+    marketplacesCount: duplicatedCount,
+    shippingRangesCount: shippingRangesCount
+  };
+}
+
+export async function getUsersWithMarketplaces() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Get all users with their marketplace count
+  const allUsers = await db.select().from(users);
+  const result = [];
+  
+  for (const user of allUsers) {
+    const userMarketplaces = await db.select().from(marketplaces).where(eq(marketplaces.userId, user.id));
+    result.push({
+      ...user,
+      marketplacesCount: userMarketplaces.length
+    });
+  }
+  
+  return result;
+}

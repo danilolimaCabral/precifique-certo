@@ -84,3 +84,10 @@
 - [x] Link para cadastro no DashboardLayout quando não logado
 - [x] Página de boas-vindas para novos usuários
 - [x] Garantir que novos usuários comecem com dados zerados
+
+## Duplicar Marketplaces para Novos Usuários
+- [x] Criar procedure adminProcedure para duplicar marketplaces
+- [x] Incluir duplicação de faixas de frete junto com marketplaces
+- [x] Adicionar botão na página de Administração para duplicar
+- [x] Permitir selecionar usuário de origem e destino
+- [x] Testes unitários para a funcionalidade (12 testes passando)

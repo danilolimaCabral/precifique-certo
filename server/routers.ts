@@ -52,12 +52,22 @@ export const appRouter = router({
   // Admin routes for user management
   admin: router({
     listUsers: adminProcedure.query(async () => db.getAllUsers()),
+    listUsersWithMarketplaces: adminProcedure.query(async () => db.getUsersWithMarketplaces()),
     updateUserRole: adminProcedure.input(z.object({
       userId: z.number(),
       role: z.enum(["user", "admin"]),
     })).mutation(async ({ input }) => db.updateUserRole(input.userId, input.role)),
     getUserStats: adminProcedure.input(z.object({ userId: z.number() })).query(async ({ input }) => {
       return db.getUserStats(input.userId);
+    }),
+    duplicateMarketplaces: adminProcedure.input(z.object({
+      sourceUserId: z.number(),
+      targetUserId: z.number(),
+    })).mutation(async ({ input }) => {
+      if (input.sourceUserId === input.targetUserId) {
+        throw new Error("Usuário de origem e destino não podem ser iguais");
+      }
+      return db.duplicateMarketplacesToUser(input.sourceUserId, input.targetUserId);
     }),
   }),
 

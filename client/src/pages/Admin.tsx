@@ -4,17 +4,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Users, Shield, ShieldCheck, Package, Boxes, Store, Loader2 } from "lucide-react";
+import { Users, Shield, ShieldCheck, Store, Loader2, Copy, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function Admin() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
+  const [sourceUserId, setSourceUserId] = useState<number | null>(null);
+  const [targetUserId, setTargetUserId] = useState<number | null>(null);
+  
   const { data: users, isLoading, refetch } = trpc.admin.listUsers.useQuery();
+  const { data: usersWithMarketplaces, refetch: refetchWithMarketplaces } = trpc.admin.listUsersWithMarketplaces.useQuery();
+  
   const updateRole = trpc.admin.updateUserRole.useMutation({
     onSuccess: () => {
       toast.success("Permissão atualizada com sucesso!");
@@ -22,6 +29,19 @@ export default function Admin() {
     },
     onError: (error) => {
       toast.error(error.message || "Erro ao atualizar permissão");
+    },
+  });
+
+  const duplicateMarketplaces = trpc.admin.duplicateMarketplaces.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      setDuplicateDialogOpen(false);
+      setSourceUserId(null);
+      setTargetUserId(null);
+      refetchWithMarketplaces();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Erro ao duplicar marketplaces");
     },
   });
 
@@ -51,6 +71,18 @@ export default function Admin() {
     updateRole.mutate({ userId, role: newRole });
   };
 
+  const handleDuplicate = () => {
+    if (!sourceUserId || !targetUserId) {
+      toast.error("Selecione o usuário de origem e destino");
+      return;
+    }
+    if (sourceUserId === targetUserId) {
+      toast.error("Usuário de origem e destino não podem ser iguais");
+      return;
+    }
+    duplicateMarketplaces.mutate({ sourceUserId, targetUserId });
+  };
+
   const formatDate = (date: Date | string) => {
     return new Date(date).toLocaleDateString("pt-BR", {
       day: "2-digit",
@@ -61,18 +93,136 @@ export default function Admin() {
     });
   };
 
+  const usersWithMp = usersWithMarketplaces || [];
+  const usersWithMarketplacesSource = usersWithMp.filter((u: any) => u.marketplacesCount > 0);
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg">
-            <Shield className="h-6 w-6 text-white" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg">
+              <Shield className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">Administração</h1>
+              <p className="text-muted-foreground">Gerencie usuários e permissões do sistema</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Administração</h1>
-            <p className="text-muted-foreground">Gerencie usuários e permissões do sistema</p>
-          </div>
+          
+          {/* Duplicate Marketplaces Button */}
+          <Dialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600">
+                <Copy className="h-4 w-4" />
+                Duplicar Marketplaces
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Store className="h-5 w-5 text-green-500" />
+                  Duplicar Marketplaces
+                </DialogTitle>
+                <DialogDescription>
+                  Copie todos os marketplaces e faixas de frete de um usuário para outro. Útil para configurar novos clientes rapidamente.
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Usuário de Origem (copiar de)</label>
+                  <Select
+                    value={sourceUserId?.toString() || ""}
+                    onValueChange={(value) => setSourceUserId(parseInt(value))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o usuário de origem" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {usersWithMarketplacesSource.map((u: any) => (
+                        <SelectItem key={u.id} value={u.id.toString()}>
+                          <div className="flex items-center gap-2">
+                            <span>{u.name || u.email || "Usuário " + u.id}</span>
+                            <Badge variant="secondary" className="text-xs">
+                              {u.marketplacesCount} marketplace(s)
+                            </Badge>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {usersWithMarketplacesSource.length === 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Nenhum usuário possui marketplaces cadastrados ainda.
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex justify-center">
+                  <ArrowRight className="h-6 w-6 text-muted-foreground" />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Usuário de Destino (copiar para)</label>
+                  <Select
+                    value={targetUserId?.toString() || ""}
+                    onValueChange={(value) => setTargetUserId(parseInt(value))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o usuário de destino" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {usersWithMp
+                        .filter((u: any) => u.id !== sourceUserId)
+                        .map((u: any) => (
+                          <SelectItem key={u.id} value={u.id.toString()}>
+                            <div className="flex items-center gap-2">
+                              <span>{u.name || u.email || "Usuário " + u.id}</span>
+                              <Badge variant="outline" className="text-xs">
+                                {u.marketplacesCount} marketplace(s)
+                              </Badge>
+                            </div>
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {sourceUserId && targetUserId && (
+                  <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+                    <p className="text-sm text-amber-800">
+                      <strong>Atenção:</strong> Esta ação irá adicionar os marketplaces do usuário de origem ao usuário de destino. Os marketplaces existentes do destino não serão removidos.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDuplicateDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button 
+                  onClick={handleDuplicate}
+                  disabled={!sourceUserId || !targetUserId || duplicateMarketplaces.isPending}
+                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                >
+                  {duplicateMarketplaces.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Duplicando...
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4 mr-2" />
+                      Duplicar
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Stats Cards */}
@@ -131,6 +281,7 @@ export default function Admin() {
                   <TableRow>
                     <TableHead>Usuário</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Marketplaces</TableHead>
                     <TableHead>Permissão</TableHead>
                     <TableHead>Cadastro</TableHead>
                     <TableHead>Último Acesso</TableHead>
@@ -138,7 +289,7 @@ export default function Admin() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users?.map((u) => (
+                  {usersWithMp.map((u: any) => (
                     <TableRow key={u.id}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
@@ -154,6 +305,12 @@ export default function Admin() {
                         </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground">{u.email || "-"}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="gap-1">
+                          <Store className="h-3 w-3" />
+                          {u.marketplacesCount}
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         <Badge variant={u.role === "admin" ? "default" : "secondary"} className={u.role === "admin" ? "bg-purple-500" : ""}>
                           {u.role === "admin" ? "Admin" : "Usuário"}
@@ -201,10 +358,10 @@ export default function Admin() {
               <strong>Isolamento de Dados:</strong> Cada usuário tem seus próprios materiais, produtos, marketplaces e configurações. Um usuário nunca vê os dados de outro.
             </p>
             <p>
-              <strong>Administradores:</strong> Podem acessar esta página para gerenciar permissões de outros usuários. Não têm acesso aos dados dos outros usuários.
+              <strong>Duplicar Marketplaces:</strong> Use o botão "Duplicar Marketplaces" para copiar rapidamente a configuração de marketplaces e faixas de frete de um usuário para outro.
             </p>
             <p>
-              <strong>Usuários Comuns:</strong> Têm acesso completo ao sistema de precificação, mas apenas aos seus próprios dados.
+              <strong>Administradores:</strong> Podem acessar esta página para gerenciar permissões de outros usuários e duplicar configurações.
             </p>
           </CardContent>
         </Card>
