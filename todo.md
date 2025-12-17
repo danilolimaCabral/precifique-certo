@@ -49,3 +49,9 @@
 - [x] Cadastrar Amazon FBA com comissões reais
 - [x] Configurar faixas de frete para cada marketplace
 - [x] Ajustar configurações fiscais padrão (Simples Nacional)
+
+## Novas Funcionalidades
+- [x] CRUD de faixas de frete no backend
+- [x] Interface de edição de faixas na página Marketplaces
+- [x] Modal para adicionar/editar faixas de frete
+- [x] Botão para excluir faixas de frete
