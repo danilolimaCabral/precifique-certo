@@ -537,3 +537,133 @@ export async function updatePlan(id: number, data: Partial<InsertPlan>) {
   await db.update(plans).set(data).where(eq(plans.id, id));
   return getPlanById(id);
 }
+
+// ============ TRIAL SYSTEM ============
+const TRIAL_DAYS = 7;
+
+export async function startTrial(userId: number, planId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Check if user already used trial
+  const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  if (!user[0]) throw new Error("User not found");
+  if (user[0].trialUsed) throw new Error("Você já utilizou seu período de teste gratuito");
+  
+  // Check if plan exists and is not free
+  const plan = await getPlanById(planId);
+  if (!plan) throw new Error("Plano não encontrado");
+  if (plan.slug === "free") throw new Error("O plano gratuito não precisa de período de teste");
+  
+  // Start trial
+  await db.update(users).set({
+    trialPlanId: planId,
+    trialStartedAt: new Date(),
+    trialUsed: true,
+  }).where(eq(users.id, userId));
+  
+  return { 
+    success: true, 
+    message: `Período de teste de ${TRIAL_DAYS} dias iniciado para o plano ${plan.name}`,
+    trialEndsAt: new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000)
+  };
+}
+
+export async function getTrialStatus(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  if (!user[0]) return null;
+  
+  // No trial active
+  if (!user[0].trialPlanId || !user[0].trialStartedAt) {
+    return {
+      hasActiveTrial: false,
+      trialUsed: user[0].trialUsed,
+      canStartTrial: !user[0].trialUsed,
+      daysRemaining: 0,
+      trialPlan: null,
+    };
+  }
+  
+  const trialStarted = new Date(user[0].trialStartedAt).getTime();
+  const trialEnds = trialStarted + TRIAL_DAYS * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const daysRemaining = Math.max(0, Math.ceil((trialEnds - now) / (24 * 60 * 60 * 1000)));
+  const hasActiveTrial = now < trialEnds;
+  
+  const trialPlan = await getPlanById(user[0].trialPlanId);
+  
+  return {
+    hasActiveTrial,
+    trialUsed: user[0].trialUsed,
+    canStartTrial: false,
+    daysRemaining,
+    trialPlan,
+    trialStartedAt: user[0].trialStartedAt,
+    trialEndsAt: new Date(trialEnds),
+  };
+}
+
+export async function getEffectivePlan(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  // Check if user has active trial
+  const trialStatus = await getTrialStatus(userId);
+  if (trialStatus?.hasActiveTrial && trialStatus.trialPlan) {
+    return trialStatus.trialPlan;
+  }
+  
+  // Otherwise return regular plan
+  return getUserPlan(userId);
+}
+
+// Update checkPlanLimits to use effective plan (considering trial)
+export async function checkPlanLimitsWithTrial(userId: number) {
+  const db = await getDb();
+  if (!db) return { canCreate: false, reason: "Database not available" };
+  
+  const plan = await getEffectivePlan(userId);
+  const trialStatus = await getTrialStatus(userId);
+  
+  if (!plan) {
+    return { 
+      canCreateMaterial: true, 
+      canCreateProduct: true, 
+      canCreateMarketplace: true,
+      materialsUsed: 0,
+      productsUsed: 0,
+      marketplacesUsed: 0,
+      plan: null,
+      trial: trialStatus
+    };
+  }
+  
+  const userMaterials = await db.select().from(materials).where(eq(materials.userId, userId));
+  const userProducts = await db.select().from(products).where(eq(products.userId, userId));
+  const userMarketplaces = await db.select().from(marketplaces).where(eq(marketplaces.userId, userId));
+  
+  const materialsUsed = userMaterials.length;
+  const productsUsed = userProducts.length;
+  const marketplacesUsed = userMarketplaces.length;
+  
+  const canCreateMaterial = plan.maxMaterials === -1 || materialsUsed < plan.maxMaterials;
+  const canCreateProduct = plan.maxProducts === -1 || productsUsed < plan.maxProducts;
+  const canCreateMarketplace = plan.maxMarketplaces === -1 || marketplacesUsed < plan.maxMarketplaces;
+  
+  return {
+    canCreateMaterial,
+    canCreateProduct,
+    canCreateMarketplace,
+    materialsUsed,
+    productsUsed,
+    marketplacesUsed,
+    materialsLimit: plan.maxMaterials,
+    productsLimit: plan.maxProducts,
+    marketplacesLimit: plan.maxMarketplaces,
+    plan,
+    trial: trialStatus
+  };
+}

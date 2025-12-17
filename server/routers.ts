@@ -100,8 +100,11 @@ export const appRouter = router({
     list: publicProcedure.query(async () => db.getPlans()),
     get: publicProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => db.getPlanById(input.id)),
     getBySlug: publicProcedure.input(z.object({ slug: z.string() })).query(async ({ input }) => db.getPlanBySlug(input.slug)),
-    myPlan: protectedProcedure.query(async ({ ctx }) => db.getUserPlan(ctx.user.id)),
-    myLimits: protectedProcedure.query(async ({ ctx }) => db.checkPlanLimits(ctx.user.id)),
+    myPlan: protectedProcedure.query(async ({ ctx }) => db.getEffectivePlan(ctx.user.id)),
+    myLimits: protectedProcedure.query(async ({ ctx }) => db.checkPlanLimitsWithTrial(ctx.user.id)),
+    // Trial
+    trialStatus: protectedProcedure.query(async ({ ctx }) => db.getTrialStatus(ctx.user.id)),
+    startTrial: protectedProcedure.input(z.object({ planId: z.number() })).mutation(async ({ ctx, input }) => db.startTrial(ctx.user.id, input.planId)),
   }),
 
   // Materials - Multi-tenant

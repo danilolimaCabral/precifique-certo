@@ -101,3 +101,12 @@
 - [x] Mostrar plano atual no perfil do usuário
 - [x] Bloquear funcionalidades quando limite atingido
 - [x] Criar página de upgrade de plano (integrada na página de Planos)
+
+## Período de Teste Gratuito (Trial)
+- [x] Adicionar campos trialStartedAt e trialPlanId na tabela users
+- [x] Criar lógica para iniciar trial de 7 dias
+- [x] Verificar se trial está ativo ou expirado
+- [x] Mostrar dias restantes do trial na interface
+- [x] Bloquear funcionalidades quando trial expirar
+- [x] Botão para iniciar trial na página de planos
+- [x] Testes unitários para a funcionalidade de trial (15 testes passando)

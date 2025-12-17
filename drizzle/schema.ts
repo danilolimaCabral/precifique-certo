@@ -33,6 +33,9 @@ export const users = mysqlTable("users", {
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   planId: int("planId"),
   planExpiresAt: timestamp("planExpiresAt"),
+  trialPlanId: int("trialPlanId"), // Plan being trialed
+  trialStartedAt: timestamp("trialStartedAt"), // When trial started
+  trialUsed: boolean("trialUsed").default(false).notNull(), // If user already used trial
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),

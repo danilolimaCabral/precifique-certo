@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
-import { Check, X, Sparkles, Zap, Building2, Crown } from "lucide-react";
+import { Check, X, Sparkles, Zap, Building2, Crown, Clock, Gift } from "lucide-react";
 import { Link } from "wouter";
 import { toast } from "sonner";
 
@@ -23,9 +23,23 @@ const planColors: Record<string, string> = {
 
 export default function Planos() {
   const { user, isAuthenticated } = useAuth();
+  const utils = trpc.useUtils();
   const { data: plans, isLoading } = trpc.plans.list.useQuery();
   const { data: myPlan } = trpc.plans.myPlan.useQuery(undefined, { enabled: isAuthenticated });
   const { data: myLimits } = trpc.plans.myLimits.useQuery(undefined, { enabled: isAuthenticated });
+  const { data: trialStatus } = trpc.plans.trialStatus.useQuery(undefined, { enabled: isAuthenticated });
+  
+  const startTrialMutation = trpc.plans.startTrial.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      utils.plans.trialStatus.invalidate();
+      utils.plans.myPlan.invalidate();
+      utils.plans.myLimits.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    }
+  });
 
   const formatPrice = (price: string | number) => {
     const num = typeof price === "string" ? parseFloat(price) : price;
@@ -34,6 +48,14 @@ export default function Planos() {
 
   const formatLimit = (limit: number) => {
     return limit === -1 ? "Ilimitado" : limit.toString();
+  };
+
+  const handleStartTrial = (planId: number) => {
+    if (!isAuthenticated) {
+      toast.info("Faça login ou cadastre-se para iniciar o período de teste");
+      return;
+    }
+    startTrialMutation.mutate({ planId });
   };
 
   const handleSelectPlan = (planSlug: string) => {
@@ -47,7 +69,6 @@ export default function Planos() {
       return;
     }
     
-    // For paid plans, show contact info (manual payment workflow)
     toast.info(
       "Para assinar este plano, entre em contato conosco via WhatsApp ou email para receber o link de pagamento via PIX.",
       { duration: 8000 }
@@ -101,8 +122,27 @@ export default function Planos() {
             Precifique seus produtos com precisão e aumente sua margem de lucro em todos os marketplaces
           </p>
           
-          {isAuthenticated && myPlan && (
-            <div className="inline-flex items-center gap-2 bg-white rounded-full px-6 py-3 shadow-md border">
+          {/* Trial Status Banner */}
+          {isAuthenticated && trialStatus?.hasActiveTrial && (
+            <div className="inline-flex items-center gap-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full px-6 py-3 shadow-lg mb-4">
+              <Clock className="h-5 w-5" />
+              <span className="font-medium">
+                Período de teste: <strong>{trialStatus.daysRemaining} dias restantes</strong> do plano {trialStatus.trialPlan?.name}
+              </span>
+            </div>
+          )}
+          
+          {isAuthenticated && trialStatus?.canStartTrial && (
+            <div className="inline-flex items-center gap-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full px-6 py-3 shadow-lg mb-4">
+              <Gift className="h-5 w-5" />
+              <span className="font-medium">
+                Experimente qualquer plano pago por <strong>7 dias grátis</strong>!
+              </span>
+            </div>
+          )}
+          
+          {isAuthenticated && myPlan && !trialStatus?.hasActiveTrial && (
+            <div className="inline-flex items-center gap-2 bg-white rounded-full px-6 py-3 shadow-md border mt-4">
               <span className="text-gray-600">Seu plano atual:</span>
               <Badge className={planColors[myPlan.slug] || "bg-gray-100"}>
                 {myPlan.name}
@@ -118,14 +158,17 @@ export default function Planos() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {plans?.map((plan) => {
               const isCurrentPlan = myPlan?.id === plan.id;
+              const isTrialPlan = trialStatus?.hasActiveTrial && trialStatus.trialPlan?.id === plan.id;
               const isPro = plan.slug === "pro";
+              const isFree = plan.slug === "free";
+              const canTrial = isAuthenticated && trialStatus?.canStartTrial && !isFree;
               
               return (
                 <Card 
                   key={plan.id} 
                   className={`relative overflow-hidden transition-all hover:shadow-xl ${
                     isPro ? "border-2 border-purple-500 shadow-lg scale-105" : ""
-                  } ${isCurrentPlan ? "ring-2 ring-indigo-500" : ""}`}
+                  } ${isCurrentPlan || isTrialPlan ? "ring-2 ring-indigo-500" : ""}`}
                 >
                   {isPro && (
                     <div className="absolute top-0 right-0 bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
@@ -133,7 +176,13 @@ export default function Planos() {
                     </div>
                   )}
                   
-                  {isCurrentPlan && (
+                  {isTrialPlan && (
+                    <div className="absolute top-0 left-0 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-br-lg">
+                      EM TESTE
+                    </div>
+                  )}
+                  
+                  {isCurrentPlan && !isTrialPlan && (
                     <div className="absolute top-0 left-0 bg-indigo-500 text-white text-xs font-bold px-3 py-1 rounded-br-lg">
                       SEU PLANO
                     </div>
@@ -218,14 +267,33 @@ export default function Planos() {
                     </ul>
                   </CardContent>
                   
-                  <CardFooter>
+                  <CardFooter className="flex flex-col gap-2">
+                    {/* Trial Button */}
+                    {canTrial && (
+                      <Button 
+                        className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                        onClick={() => handleStartTrial(plan.id)}
+                        disabled={startTrialMutation.isPending}
+                      >
+                        <Gift className="h-4 w-4 mr-2" />
+                        {startTrialMutation.isPending ? "Iniciando..." : "Testar 7 dias grátis"}
+                      </Button>
+                    )}
+                    
+                    {/* Main Action Button */}
                     <Button 
                       className={`w-full ${isPro ? "bg-purple-600 hover:bg-purple-700" : ""}`}
-                      variant={isCurrentPlan ? "outline" : "default"}
-                      disabled={isCurrentPlan}
+                      variant={isCurrentPlan || isTrialPlan ? "outline" : canTrial ? "outline" : "default"}
+                      disabled={isCurrentPlan || isTrialPlan}
                       onClick={() => handleSelectPlan(plan.slug)}
                     >
-                      {isCurrentPlan ? "Plano Atual" : plan.slug === "free" ? "Começar Grátis" : "Assinar Agora"}
+                      {isTrialPlan 
+                        ? "Em período de teste" 
+                        : isCurrentPlan 
+                          ? "Plano Atual" 
+                          : plan.slug === "free" 
+                            ? "Começar Grátis" 
+                            : "Assinar Agora"}
                     </Button>
                   </CardFooter>
                 </Card>
@@ -241,7 +309,15 @@ export default function Planos() {
           <div className="container mx-auto max-w-2xl">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Seu uso atual</CardTitle>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  Seu uso atual
+                  {trialStatus?.hasActiveTrial && (
+                    <Badge className="bg-green-100 text-green-700">
+                      <Clock className="h-3 w-3 mr-1" />
+                      Trial: {trialStatus.daysRemaining} dias
+                    </Badge>
+                  )}
+                </CardTitle>
                 <CardDescription>Acompanhe o consumo do seu plano</CardDescription>
               </CardHeader>
               <CardContent>
@@ -281,52 +357,52 @@ export default function Planos() {
       )}
 
       {/* FAQ Section */}
-      <section className="pb-20 px-4 bg-white">
-        <div className="container mx-auto max-w-3xl py-16">
-          <h2 className="text-3xl font-bold text-center mb-12">Perguntas Frequentes</h2>
-          
-          <div className="space-y-6">
-            <div className="border-b pb-6">
-              <h3 className="font-semibold text-lg mb-2">Posso mudar de plano a qualquer momento?</h3>
-              <p className="text-gray-600">
-                Sim! Você pode fazer upgrade ou downgrade do seu plano a qualquer momento. 
-                O valor será ajustado proporcionalmente ao período restante.
-              </p>
-            </div>
-            
-            <div className="border-b pb-6">
-              <h3 className="font-semibold text-lg mb-2">Como funciona o pagamento?</h3>
-              <p className="text-gray-600">
-                Aceitamos pagamento via PIX ou boleto bancário. Após a confirmação do pagamento, 
-                seu plano é ativado imediatamente. Em breve teremos cartão de crédito disponível.
-              </p>
-            </div>
-            
-            <div className="border-b pb-6">
-              <h3 className="font-semibold text-lg mb-2">O que acontece se eu atingir o limite do meu plano?</h3>
-              <p className="text-gray-600">
-                Você receberá um aviso quando estiver próximo do limite. Ao atingir o limite, 
-                não será possível criar novos itens, mas você poderá editar os existentes ou fazer upgrade.
-              </p>
-            </div>
-            
-            <div className="pb-6">
-              <h3 className="font-semibold text-lg mb-2">Existe período de teste?</h3>
-              <p className="text-gray-600">
-                O plano Gratuito permite que você teste todas as funcionalidades básicas sem custo. 
-                Quando precisar de mais recursos, faça upgrade para um plano pago.
-              </p>
-            </div>
+      <section className="pb-20 px-4">
+        <div className="container mx-auto max-w-3xl">
+          <h2 className="text-2xl font-bold text-center mb-8">Perguntas Frequentes</h2>
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Como funciona o período de teste?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  Você pode experimentar qualquer plano pago por 7 dias gratuitamente, sem compromisso. 
+                  Durante o período de teste, você terá acesso a todas as funcionalidades do plano escolhido. 
+                  Após os 7 dias, seu acesso volta ao plano gratuito automaticamente, a menos que você assine.
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Posso mudar de plano a qualquer momento?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  Sim! Você pode fazer upgrade ou downgrade do seu plano a qualquer momento. 
+                  O valor será ajustado proporcionalmente ao período restante.
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Quais formas de pagamento são aceitas?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  Atualmente aceitamos pagamentos via PIX e boleto bancário. 
+                  Entre em contato conosco para receber o link de pagamento.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-8">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-gray-400">
-            © 2024 PRECIFIQUE CERTO. Todos os direitos reservados.
-          </p>
+      <footer className="border-t bg-white py-8">
+        <div className="container mx-auto px-4 text-center text-gray-600">
+          <p>© 2025 PRECIFIQUE CERTO. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>
