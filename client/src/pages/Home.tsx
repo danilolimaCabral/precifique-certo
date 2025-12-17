@@ -1,7 +1,7 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
-import { Package, Boxes, Store, Calculator, TrendingUp, Sparkles, AlertTriangle, Target, Zap, BarChart3, PieChart } from "lucide-react";
+import { Package, Boxes, Store, Calculator, TrendingUp, Sparkles, AlertTriangle, Target, Zap, BarChart3, PieChart, DollarSign } from "lucide-react";
 import { Link } from "wouter";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPie, Pie, Cell, Legend } from "recharts";
 
@@ -55,7 +55,17 @@ export default function Home() {
     fill: CHART_COLORS[index % CHART_COLORS.length],
   })) || [];
 
+  // Prepare profit by marketplace bar chart data
+  const profitByMarketplaceData = marginByMarketplace?.map((m: any, index: number) => ({
+    name: m.name?.substring(0, 12) || "N/A",
+    lucro: Number(m.marginValue?.toFixed(2)) || 0,
+    fill: CHART_COLORS[index % CHART_COLORS.length],
+  })) || [];
+
   const hasChartData = productChartData.length > 0 || marketplaceChartData.length > 0;
+
+  // Calculate total profit
+  const totalProfit = profitByMarketplaceData.reduce((sum: number, m: any) => sum + m.lucro, 0);
 
   return (
     <DashboardLayout>
@@ -97,115 +107,184 @@ export default function Home() {
 
         {/* Charts Section */}
         {hasChartData && (
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Margin by Product Chart */}
+          <>
+            <div className="grid gap-6 lg:grid-cols-2">
+              {/* Margin by Product Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-primary" />
+                    Margem por Produto
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {productChartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={productChartData} margin={{ top: 10, right: 30, left: 0, bottom: 40 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis 
+                          dataKey="name" 
+                          tick={{ fontSize: 11 }} 
+                          angle={-45} 
+                          textAnchor="end"
+                          height={60}
+                        />
+                        <YAxis 
+                          tick={{ fontSize: 12 }} 
+                          tickFormatter={(value) => `${value}%`}
+                        />
+                        <Tooltip 
+                          formatter={(value: number, name: string) => [
+                            name === "margem" ? `${value}%` : `R$ ${value.toFixed(2)}`,
+                            name === "margem" ? "Margem %" : "Valor R$"
+                          ]}
+                          contentStyle={{ 
+                            backgroundColor: "white", 
+                            border: "1px solid #e5e7eb",
+                            borderRadius: "8px",
+                            boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)"
+                          }}
+                        />
+                        <Bar 
+                          dataKey="margem" 
+                          fill="#8b5cf6" 
+                          radius={[4, 4, 0, 0]}
+                          name="Margem %"
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                      <div className="text-center">
+                        <Boxes className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p>Cadastre produtos para ver o gráfico</p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Margin by Marketplace Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <PieChart className="h-5 w-5 text-primary" />
+                    Margem por Marketplace
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {marketplaceChartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <RechartsPie>
+                        <Pie
+                          data={marketplaceChartData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={100}
+                          paddingAngle={2}
+                          dataKey="value"
+                          label={({ name, value }) => `${name}: ${value}%`}
+                          labelLine={false}
+                        >
+                          {marketplaceChartData.map((entry: any, index: number) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value: number, name: string, props: any) => [
+                            `${value}% (R$ ${props.payload.marginValue})`,
+                            "Margem"
+                          ]}
+                          contentStyle={{ 
+                            backgroundColor: "white", 
+                            border: "1px solid #e5e7eb",
+                            borderRadius: "8px",
+                            boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)"
+                          }}
+                        />
+                        <Legend />
+                      </RechartsPie>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                      <div className="text-center">
+                        <Store className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p>Configure marketplaces para ver o gráfico</p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Profit by Marketplace Bar Chart */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-primary" />
-                  Margem por Produto
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-emerald-600" />
+                    Lucro Total por Marketplace
+                  </CardTitle>
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">Lucro Total Estimado</p>
+                    <p className={`text-2xl font-bold ${totalProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                      R$ {totalProfit.toFixed(2)}
+                    </p>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                {productChartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={productChartData} margin={{ top: 10, right: 30, left: 0, bottom: 40 }}>
+                {profitByMarketplaceData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={350}>
+                    <BarChart data={profitByMarketplaceData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                       <XAxis 
                         dataKey="name" 
-                        tick={{ fontSize: 11 }} 
+                        tick={{ fontSize: 12 }} 
                         angle={-45} 
                         textAnchor="end"
-                        height={60}
+                        height={80}
                       />
                       <YAxis 
                         tick={{ fontSize: 12 }} 
-                        tickFormatter={(value) => `${value}%`}
+                        tickFormatter={(value) => `R$ ${value}`}
                       />
                       <Tooltip 
-                        formatter={(value: number, name: string) => [
-                          name === "margem" ? `${value}%` : `R$ ${value.toFixed(2)}`,
-                          name === "margem" ? "Margem %" : "Valor R$"
-                        ]}
+                        formatter={(value: number) => [`R$ ${value.toFixed(2)}`, "Lucro"]}
                         contentStyle={{ 
                           backgroundColor: "white", 
                           border: "1px solid #e5e7eb",
                           borderRadius: "8px",
                           boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)"
                         }}
+                        labelStyle={{ fontWeight: "bold" }}
                       />
                       <Bar 
-                        dataKey="margem" 
-                        fill="#8b5cf6" 
-                        radius={[4, 4, 0, 0]}
-                        name="Margem %"
-                      />
+                        dataKey="lucro" 
+                        radius={[6, 6, 0, 0]}
+                        name="Lucro R$"
+                      >
+                        {profitByMarketplaceData.map((entry: any, index: number) => (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={entry.lucro >= 0 ? CHART_COLORS[index % CHART_COLORS.length] : "#ef4444"} 
+                          />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                  <div className="h-[350px] flex items-center justify-center text-muted-foreground">
                     <div className="text-center">
-                      <Boxes className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>Cadastre produtos para ver o gráfico</p>
+                      <DollarSign className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p>Configure marketplaces e produtos para ver o gráfico de lucro</p>
                     </div>
                   </div>
                 )}
               </CardContent>
             </Card>
-
-            {/* Margin by Marketplace Chart */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <PieChart className="h-5 w-5 text-primary" />
-                  Margem por Marketplace
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {marketplaceChartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <RechartsPie>
-                      <Pie
-                        data={marketplaceChartData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
-                        paddingAngle={2}
-                        dataKey="value"
-                        label={({ name, value }) => `${name}: ${value}%`}
-                        labelLine={false}
-                      >
-                        {marketplaceChartData.map((entry: any, index: number) => (
-                          <Cell key={`cell-${index}`} fill={entry.fill} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        formatter={(value: number, name: string, props: any) => [
-                          `${value}% (R$ ${props.payload.marginValue})`,
-                          "Margem"
-                        ]}
-                        contentStyle={{ 
-                          backgroundColor: "white", 
-                          border: "1px solid #e5e7eb",
-                          borderRadius: "8px",
-                          boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)"
-                        }}
-                      />
-                      <Legend />
-                    </RechartsPie>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                    <div className="text-center">
-                      <Store className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>Configure marketplaces para ver o gráfico</p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+          </>
         )}
 
         <div>

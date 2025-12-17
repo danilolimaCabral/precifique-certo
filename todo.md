@@ -129,3 +129,6 @@
 
 ## Bugs a Corrigir
 - [x] Coluna userId não existe na tabela shippingRanges - adicionar coluna
+
+## Gráfico de Lucro por Marketplace
+- [x] Adicionar gráfico de barras comparando lucro total por marketplace no Dashboard
