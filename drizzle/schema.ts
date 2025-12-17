@@ -122,11 +122,26 @@ export const shippingRanges = mysqlTable("shippingRanges", {
 export type ShippingRange = typeof shippingRanges.$inferSelect;
 export type InsertShippingRange = typeof shippingRanges.$inferInsert;
 
+// Tax Regimes - System-wide (shared across all users)
+export const taxRegimes = mysqlTable("taxRegimes", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  defaultRate: decimal("defaultRate", { precision: 5, scale: 2 }).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  isSystem: boolean("isSystem").default(true).notNull(), // System regimes can't be deleted
+  sortOrder: int("sortOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type TaxRegime = typeof taxRegimes.$inferSelect;
+export type InsertTaxRegime = typeof taxRegimes.$inferInsert;
+
 // Settings - Multi-tenant (each user has their own settings)
 export const settings = mysqlTable("settings", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(), // Tenant isolation
-  taxName: varchar("taxName", { length: 100 }).default("Simples Nacional"),
+  taxRegimeId: int("taxRegimeId"), // Reference to tax regime
+  taxName: varchar("taxName", { length: 100 }).default("Simples Nacional"), // For custom regime name
   taxPercent: decimal("taxPercent", { precision: 5, scale: 2 }).default("0"),
   adsPercent: decimal("adsPercent", { precision: 5, scale: 2 }).default("0"),
   opexType: mysqlEnum("opexType", ["percent", "fixed"]).default("percent"),

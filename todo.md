@@ -154,3 +154,18 @@
 - [x] Criar página de callback OAuth
 - [x] Adicionar link no menu lateral
 - [x] Testes unitários da integração (14 testes passando)
+
+
+## Campo de Regime Tributário
+- [x] Criar tabela tax_regimes no banco de dados (id, nome, aliquota_padrao, ativo)
+- [x] Adicionar campo taxRegimeId na tabela settings
+- [x] Criar rotas CRUD para regimes tributários
+- [x] Popular regimes padrão (Simples Nacional, Lucro Presumido, Lucro Real, MEI, Isento, Outro)
+- [x] Substituir campo texto por select com busca na página Configurações
+- [x] Implementar autocomplete com ícone de lupa
+- [x] Preencher alíquota automaticamente ao selecionar regime
+- [x] Permitir edição manual da alíquota
+- [x] Implementar opção "Outro (Personalizado)" com campo adicional
+- [x] Validar campo obrigatório antes de salvar
+- [x] Integrar regime tributário com cálculos de precificação
+- [x] Testes unitários da funcionalidade (25 testes passando)

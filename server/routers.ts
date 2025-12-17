@@ -228,9 +228,31 @@ export const appRouter = router({
   }),
 
   // Settings - Multi-tenant
+  // Tax Regimes - System-wide
+  taxRegimes: router({
+    list: publicProcedure.query(async () => db.getTaxRegimes()),
+    listAll: adminProcedure.query(async () => db.getAllTaxRegimes()),
+    get: publicProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => db.getTaxRegimeById(input.id)),
+    create: adminProcedure.input(z.object({
+      name: z.string().min(1, "Nome é obrigatório"),
+      defaultRate: z.string(),
+    })).mutation(async ({ input }) => db.createTaxRegime(input)),
+    update: adminProcedure.input(z.object({
+      id: z.number(),
+      name: z.string().optional(),
+      defaultRate: z.string().optional(),
+      isActive: z.boolean().optional(),
+    })).mutation(async ({ input }) => {
+      const { id, ...data } = input;
+      return db.updateTaxRegime(id, data);
+    }),
+    delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => db.deleteTaxRegime(input.id)),
+  }),
+
   settings: router({
     get: protectedProcedure.query(async ({ ctx }) => db.getSettings(ctx.user.id)),
     update: protectedProcedure.input(z.object({
+      taxRegimeId: z.number().optional(),
       taxName: z.string().optional(),
       taxPercent: z.string().optional(),
       adsPercent: z.string().optional(),

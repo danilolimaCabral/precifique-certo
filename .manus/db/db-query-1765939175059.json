@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO `taxRegimes` (`name`, `defaultRate`, `isActive`, `isSystem`, `sortOrder`) VALUES\n('Simples Nacional', 6.00, true, true, 1),\n('Lucro Presumido', 11.33, true, true, 2),\n('Lucro Real', 9.25, true, true, 3),\n('MEI', 0.00, true, true, 4),\n('Isento', 0.00, true, true, 5),\n('Outro (Personalizado)', 0.00, true, true, 6)\nON DUPLICATE KEY UPDATE name=name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CoKcC9nrGmnRVN.e5cb2b17c667 --database 4s2RPQbUiLyDQzYKK4VQq2 --execute INSERT INTO `taxRegimes` (`name`, `defaultRate`, `isActive`, `isSystem`, `sortOrder`) VALUES\n('Simples Nacional', 6.00, true, true, 1),\n('Lucro Presumido', 11.33, true, true, 2),\n('Lucro Real', 9.25, true, true, 3),\n('MEI', 0.00, true, true, 4),\n('Isento', 0.00, true, true, 5),\n('Outro (Personalizado)', 0.00, true, true, 6)\nON DUPLICATE KEY UPDATE name=name;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 67
+}

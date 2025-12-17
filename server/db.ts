@@ -1,6 +1,6 @@
 import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, materials, products, productMaterials, marketplaces, shippingRanges, settings, customCharges, pricingRecords, plans, Material, Product, ProductMaterial, Marketplace, ShippingRange, Settings, CustomCharge, PricingRecord, Plan, InsertMaterial, InsertProduct, InsertProductMaterial, InsertMarketplace, InsertShippingRange, InsertSettings, InsertCustomCharge, InsertPricingRecord, InsertPlan } from "../drizzle/schema";
+import { InsertUser, users, materials, products, productMaterials, marketplaces, shippingRanges, settings, customCharges, pricingRecords, plans, taxRegimes, Material, Product, ProductMaterial, Marketplace, ShippingRange, Settings, CustomCharge, PricingRecord, Plan, TaxRegime, InsertMaterial, InsertProduct, InsertProductMaterial, InsertMarketplace, InsertShippingRange, InsertSettings, InsertCustomCharge, InsertPricingRecord, InsertPlan, InsertTaxRegime } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import bcrypt from 'bcryptjs';
 import { nanoid } from 'nanoid';
@@ -794,5 +794,74 @@ export async function deleteMlCredentials(userId: number) {
   if (!db) throw new Error("Database not available");
   
   await db.delete(mlCredentials).where(eq(mlCredentials.userId, userId));
+  return { success: true };
+}
+
+
+// ============ TAX REGIMES ============
+export async function getTaxRegimes(): Promise<TaxRegime[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(taxRegimes).where(eq(taxRegimes.isActive, true)).orderBy(taxRegimes.sortOrder);
+}
+
+export async function getAllTaxRegimes(): Promise<TaxRegime[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(taxRegimes).orderBy(taxRegimes.sortOrder);
+}
+
+export async function getTaxRegimeById(id: number): Promise<TaxRegime | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(taxRegimes).where(eq(taxRegimes.id, id)).limit(1);
+  return result[0];
+}
+
+export async function createTaxRegime(data: { name: string; defaultRate: string; isSystem?: boolean }): Promise<TaxRegime | undefined> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Get max sortOrder
+  const existing = await db.select().from(taxRegimes).orderBy(taxRegimes.sortOrder);
+  const maxOrder = existing.length > 0 ? Math.max(...existing.map(r => r.sortOrder)) : 0;
+  
+  await db.insert(taxRegimes).values({
+    name: data.name,
+    defaultRate: data.defaultRate,
+    isSystem: data.isSystem ?? false,
+    sortOrder: maxOrder + 1,
+  });
+  
+  const result = await db.select().from(taxRegimes).where(eq(taxRegimes.name, data.name)).limit(1);
+  return result[0];
+}
+
+export async function updateTaxRegime(id: number, data: { name?: string; defaultRate?: string; isActive?: boolean }): Promise<TaxRegime | undefined> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const updateData: Record<string, unknown> = {};
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.defaultRate !== undefined) updateData.defaultRate = data.defaultRate;
+  if (data.isActive !== undefined) updateData.isActive = data.isActive;
+  
+  if (Object.keys(updateData).length > 0) {
+    await db.update(taxRegimes).set(updateData).where(eq(taxRegimes.id, id));
+  }
+  
+  return getTaxRegimeById(id);
+}
+
+export async function deleteTaxRegime(id: number): Promise<{ success: boolean; message?: string }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Check if it's a system regime
+  const regime = await getTaxRegimeById(id);
+  if (!regime) return { success: false, message: "Regime não encontrado" };
+  if (regime.isSystem) return { success: false, message: "Regimes do sistema não podem ser excluídos" };
+  
+  await db.delete(taxRegimes).where(eq(taxRegimes.id, id));
   return { success: true };
 }

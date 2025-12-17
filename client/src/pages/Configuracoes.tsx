@@ -6,28 +6,57 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { trpc } from "@/lib/trpc";
-import { Settings, Plus, Pencil, Trash2, Percent, DollarSign, Calculator } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Settings, Plus, Pencil, Trash2, Percent, DollarSign, Calculator, Search, Check, ChevronsUpDown, Building2 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export default function Configuracoes() {
   const [chargeOpen, setChargeOpen] = useState(false);
   const [editChargeId, setEditChargeId] = useState<number | null>(null);
-  const [settingsForm, setSettingsForm] = useState({ taxName: "", taxPercent: "", adsPercent: "", opexType: "percent" as "percent" | "fixed", opexValue: "", minMarginTarget: "" });
+  const [regimeOpen, setRegimeOpen] = useState(false);
+  const [settingsForm, setSettingsForm] = useState({ 
+    taxRegimeId: undefined as number | undefined,
+    taxName: "", 
+    taxPercent: "", 
+    adsPercent: "", 
+    opexType: "percent" as "percent" | "fixed", 
+    opexValue: "", 
+    minMarginTarget: "" 
+  });
   const [chargeForm, setChargeForm] = useState({ name: "", chargeType: "percent_sale" as "percent_sale" | "percent_cost" | "fixed", value: "", isActive: true });
+  const [customRegimeName, setCustomRegimeName] = useState("");
 
   const utils = trpc.useUtils();
   const { data: settings, isLoading } = trpc.settings.get.useQuery();
+  const { data: taxRegimes } = trpc.taxRegimes.list.useQuery();
   const { data: customCharges } = trpc.customCharges.list.useQuery();
-  const updateSettingsMutation = trpc.settings.update.useMutation({ onSuccess: () => { utils.settings.get.invalidate(); toast.success("Configurações salvas!"); } });
+  const updateSettingsMutation = trpc.settings.update.useMutation({ 
+    onSuccess: () => { 
+      utils.settings.get.invalidate(); 
+      toast.success("Configurações salvas!"); 
+    } 
+  });
   const createChargeMutation = trpc.customCharges.create.useMutation({ onSuccess: () => { utils.customCharges.list.invalidate(); setChargeOpen(false); resetChargeForm(); toast.success("Encargo criado!"); } });
   const updateChargeMutation = trpc.customCharges.update.useMutation({ onSuccess: () => { utils.customCharges.list.invalidate(); setChargeOpen(false); resetChargeForm(); toast.success("Encargo atualizado!"); } });
   const deleteChargeMutation = trpc.customCharges.delete.useMutation({ onSuccess: () => { utils.customCharges.list.invalidate(); toast.success("Encargo excluído!"); } });
 
+  // Find selected regime
+  const selectedRegime = useMemo(() => {
+    if (!taxRegimes || !settingsForm.taxRegimeId) return null;
+    return taxRegimes.find(r => r.id === settingsForm.taxRegimeId);
+  }, [taxRegimes, settingsForm.taxRegimeId]);
+
+  // Check if "Outro (Personalizado)" is selected
+  const isCustomRegime = selectedRegime?.name === "Outro (Personalizado)";
+
   useEffect(() => {
     if (settings) {
       setSettingsForm({
+        taxRegimeId: settings.taxRegimeId ?? undefined,
         taxName: settings.taxName || "",
         taxPercent: String(settings.taxPercent || ""),
         adsPercent: String(settings.adsPercent || ""),
@@ -35,14 +64,39 @@ export default function Configuracoes() {
         opexValue: String(settings.opexValue || ""),
         minMarginTarget: String(settings.minMarginTarget || ""),
       });
+      if (settings.taxName && settings.taxName !== "Simples Nacional") {
+        setCustomRegimeName(settings.taxName);
+      }
     }
   }, [settings]);
+
+  // Auto-fill tax rate when regime changes
+  const handleRegimeSelect = (regimeId: number) => {
+    const regime = taxRegimes?.find(r => r.id === regimeId);
+    if (regime) {
+      setSettingsForm(prev => ({
+        ...prev,
+        taxRegimeId: regimeId,
+        taxPercent: String(regime.defaultRate),
+        taxName: regime.name === "Outro (Personalizado)" ? customRegimeName : regime.name,
+      }));
+    }
+    setRegimeOpen(false);
+  };
 
   const resetChargeForm = () => { setChargeForm({ name: "", chargeType: "percent_sale", value: "", isActive: true }); setEditChargeId(null); };
 
   const handleSettingsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateSettingsMutation.mutate(settingsForm);
+    if (!settingsForm.taxRegimeId) {
+      toast.error("Selecione um regime tributário para continuar");
+      return;
+    }
+    const dataToSave = {
+      ...settingsForm,
+      taxName: isCustomRegime ? customRegimeName : selectedRegime?.name || settingsForm.taxName,
+    };
+    updateSettingsMutation.mutate(dataToSave);
   };
 
   const handleChargeSubmit = (e: React.FormEvent) => {
@@ -64,33 +118,111 @@ export default function Configuracoes() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Configurações</h1>
-          <p className="text-muted-foreground">Configure impostos, ADS, OPEX e encargos personalizados</p>
+          <p className="text-muted-foreground">Configure regime tributário, ADS, OPEX e encargos personalizados</p>
         </div>
         <div className="grid lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Calculator className="h-5 w-5" />Configurações Gerais</CardTitle>
-              <CardDescription>Defina os parâmetros padrão para cálculos</CardDescription>
+              <CardTitle className="flex items-center gap-2"><Building2 className="h-5 w-5" />Regime Tributário</CardTitle>
+              <CardDescription>Selecione o regime tributário da sua empresa</CardDescription>
             </CardHeader>
             <CardContent>
               {isLoading ? (
                 <div className="text-center py-8 text-muted-foreground">Carregando...</div>
               ) : (
                 <form onSubmit={handleSettingsSubmit} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Nome do Imposto</Label>
-                      <Input value={settingsForm.taxName} onChange={(e) => setSettingsForm({ ...settingsForm, taxName: e.target.value })} placeholder="Ex: Simples Nacional" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Alíquota (%)</Label>
-                      <Input type="number" step="0.01" value={settingsForm.taxPercent} onChange={(e) => setSettingsForm({ ...settingsForm, taxPercent: e.target.value })} />
-                    </div>
+                  {/* Tax Regime Select with Search */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-1">
+                      Regime Tributário
+                      <span className="text-destructive">*</span>
+                    </Label>
+                    <Popover open={regimeOpen} onOpenChange={setRegimeOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={regimeOpen}
+                          className="w-full justify-between"
+                        >
+                          <span className="flex items-center gap-2">
+                            <Search className="h-4 w-4 text-muted-foreground" />
+                            {selectedRegime ? selectedRegime.name : "Selecione o regime tributário"}
+                          </span>
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Buscar regime tributário..." />
+                          <CommandList>
+                            <CommandEmpty>Nenhum regime encontrado.</CommandEmpty>
+                            <CommandGroup>
+                              {taxRegimes?.map((regime) => (
+                                <CommandItem
+                                  key={regime.id}
+                                  value={regime.name}
+                                  onSelect={() => handleRegimeSelect(regime.id)}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      settingsForm.taxRegimeId === regime.id ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  <div className="flex flex-col">
+                                    <span>{regime.name}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                      Alíquota padrão: {regime.defaultRate}%
+                                    </span>
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    {!settingsForm.taxRegimeId && (
+                      <p className="text-sm text-destructive">Selecione um regime tributário para continuar</p>
+                    )}
                   </div>
+
+                  {/* Custom Regime Name (only shown when "Outro" is selected) */}
+                  {isCustomRegime && (
+                    <div className="space-y-2">
+                      <Label>Nome do Regime Personalizado</Label>
+                      <Input 
+                        value={customRegimeName} 
+                        onChange={(e) => setCustomRegimeName(e.target.value)} 
+                        placeholder="Digite o nome do regime" 
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {/* Tax Rate */}
+                  <div className="space-y-2">
+                    <Label>Alíquota (%)</Label>
+                    <Input 
+                      type="number" 
+                      step="0.01" 
+                      value={settingsForm.taxPercent} 
+                      onChange={(e) => setSettingsForm({ ...settingsForm, taxPercent: e.target.value })} 
+                      placeholder="0.00"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      A alíquota padrão foi preenchida automaticamente. Você pode ajustar conforme necessário.
+                    </p>
+                  </div>
+
+                  {/* ADS */}
                   <div className="space-y-2">
                     <Label>ADS - Publicidade (%)</Label>
                     <Input type="number" step="0.01" value={settingsForm.adsPercent} onChange={(e) => setSettingsForm({ ...settingsForm, adsPercent: e.target.value })} />
                   </div>
+
+                  {/* OPEX */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Tipo de OPEX</Label>
@@ -107,15 +239,25 @@ export default function Configuracoes() {
                       <Input type="number" step="0.01" value={settingsForm.opexValue} onChange={(e) => setSettingsForm({ ...settingsForm, opexValue: e.target.value })} />
                     </div>
                   </div>
+
+                  {/* Min Margin Target */}
                   <div className="space-y-2">
                     <Label>Meta de Margem Mínima (%)</Label>
                     <Input type="number" step="0.01" value={settingsForm.minMarginTarget} onChange={(e) => setSettingsForm({ ...settingsForm, minMarginTarget: e.target.value })} />
                   </div>
-                  <Button type="submit" className="w-full" disabled={updateSettingsMutation.isPending}>Salvar Configurações</Button>
+
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={updateSettingsMutation.isPending || !settingsForm.taxRegimeId}
+                  >
+                    Salvar Configurações
+                  </Button>
                 </form>
               )}
             </CardContent>
           </Card>
+
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
