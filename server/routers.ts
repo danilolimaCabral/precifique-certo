@@ -552,6 +552,28 @@ export const appRouter = router({
       }));
     }),
 
+    // Get ML categories (public endpoint)
+    getCategories: publicProcedure.query(async () => {
+      const { getCategories } = await import("./mercadolivre");
+      return getCategories();
+    }),
+
+    // Get subcategories for a specific category
+    getSubcategories: publicProcedure.input(z.object({
+      categoryId: z.string(),
+    })).query(async ({ input }) => {
+      const { getSubcategories } = await import("./mercadolivre");
+      return getSubcategories(input.categoryId);
+    }),
+
+    // Get category details
+    getCategoryDetails: publicProcedure.input(z.object({
+      categoryId: z.string(),
+    })).query(async ({ input }) => {
+      const { getCategoryDetails } = await import("./mercadolivre");
+      return getCategoryDetails(input.categoryId);
+    }),
+
     // Sync commissions to marketplaces
     syncCommissions: protectedProcedure.input(z.object({
       referencePrice: z.number().optional(),

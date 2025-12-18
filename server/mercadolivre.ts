@@ -148,12 +148,39 @@ export async function getUserInfo(accessToken: string) {
   return response.json();
 }
 
-// Get categories from Mercado Livre
+// Get categories from Mercado Livre (public endpoint via /sites/MLB)
 export async function getCategories(): Promise<MlCategory[]> {
-  const response = await fetch(`${ML_API_BASE}/sites/MLB/categories`);
+  const response = await fetch(`${ML_API_BASE}/sites/MLB`);
   
   if (!response.ok) {
-    throw new Error(`Failed to get categories: ${response.status}`);
+    throw new Error(`Failed to get site info: ${response.status}`);
+  }
+
+  const siteData = await response.json();
+  return siteData.categories || [];
+}
+
+// Get subcategories for a specific category
+export async function getSubcategories(categoryId: string): Promise<MlCategory[]> {
+  const response = await fetch(`${ML_API_BASE}/categories/${categoryId}`);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to get category: ${response.status}`);
+  }
+
+  const categoryData = await response.json();
+  return (categoryData.children_categories || []).map((c: any) => ({
+    id: c.id,
+    name: c.name
+  }));
+}
+
+// Get category details including path
+export async function getCategoryDetails(categoryId: string) {
+  const response = await fetch(`${ML_API_BASE}/categories/${categoryId}`);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to get category details: ${response.status}`);
   }
 
   return response.json();

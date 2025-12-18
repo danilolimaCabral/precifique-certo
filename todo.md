@@ -204,3 +204,13 @@
 - [x] Corrigir problema de seleção (funcionando no dev)
 - [x] Testar funcionalidade
 - [x] Corrigir getLoginUrl para usar login local
+
+## Integração Categorias e Comissões ML
+- [x] Pesquisar API de categorias do Mercado Livre
+- [x] Implementar busca de categorias no backend
+- [x] Criar endpoint para listar categorias ML
+- [x] Criar página dedicada "Categorias ML" para navegar categorias
+- [x] Permitir criar marketplace a partir de categoria selecionada
+- [x] Preencher comissão automaticamente (16%) e taxa fixa (R$ 6,00)
+- [x] Adicionar link no menu lateral
+- [x] 179 testes unitários passando

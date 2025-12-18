@@ -38,7 +38,8 @@ import {
   Crown,
   Upload,
   Link2,
-  Receipt
+  Receipt,
+  List
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -58,6 +59,7 @@ const menuItems = [
   { icon: Settings, label: "Configurações", path: "/configuracoes" },
   { icon: Upload, label: "Importar", path: "/importar" },
   { icon: Link2, label: "Mercado Livre", path: "/mercado-livre" },
+  { icon: List, label: "Categorias ML", path: "/categorias-ml" },
   { icon: Receipt, label: "Análise de Venda", path: "/analise-venda" },
 ];
 

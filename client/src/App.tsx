@@ -22,6 +22,7 @@ import Importar from "./pages/Importar";
 import MercadoLivre from "./pages/MercadoLivre";
 import MlCallback from "./pages/MlCallback";
 import AnaliseVenda from "./pages/AnaliseVenda";
+import CategoriasML from "./pages/CategoriasML";
 
 function Router() {
   return (
@@ -44,6 +45,7 @@ function Router() {
       <Route path="/mercado-livre" component={MercadoLivre} />
       <Route path="/ml-callback" component={MlCallback} />
       <Route path="/analise-venda" component={AnaliseVenda} />
+      <Route path="/categorias-ml" component={CategoriasML} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
