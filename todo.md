@@ -192,3 +192,15 @@
 - [x] Integrar com produtos e marketplaces cadastrados
 - [x] Testes unitários (14 testes passando)
 - [x] 179 testes unitários totais passando
+
+## Bug Fix - Erro removeChild
+- [ ] Investigar erro "NotFoundError: Failed to execute 'removeChild'"
+- [ ] Identificar componente causador do problema
+- [ ] Implementar correção
+- [ ] Testar em produção
+
+## Bug Fix - Erro ao selecionar produto na Precificação
+- [x] Investigar erro no Select de produtos
+- [x] Corrigir problema de seleção (funcionando no dev)
+- [x] Testar funcionalidade
+- [x] Corrigir getLoginUrl para usar login local
