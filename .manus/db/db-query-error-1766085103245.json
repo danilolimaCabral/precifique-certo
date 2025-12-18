@@ -1,0 +1,8 @@
+{
+  "query": "SELECT 'admin' as tipo, id, email FROM users WHERE email = 'admin@precifiquecerto.com' UNION ALL SELECT 'produto' as tipo, id, CAST(userId AS CHAR) FROM products;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CoKcC9nrGmnRVN.e5cb2b17c667 --database 4s2RPQbUiLyDQzYKK4VQq2 --execute SELECT 'admin' as tipo, id, email FROM users WHERE email = 'admin@precifiquecerto.com' UNION ALL SELECT 'produto' as tipo, id, CAST(userId AS CHAR) FROM products;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1271 (HY000) at line 1: Illegal mix of collations for operation 'UNION'"
+  ]
+}

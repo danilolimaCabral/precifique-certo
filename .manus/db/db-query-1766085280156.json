@@ -1,0 +1,13 @@
+{
+  "query": "SELECT id FROM users WHERE email = 'admin@precifiquecerto.com';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CoKcC9nrGmnRVN.e5cb2b17c667 --database 4s2RPQbUiLyDQzYKK4VQq2 --execute SELECT id FROM users WHERE email = 'admin@precifiquecerto.com';",
+  "rows": [
+    {
+      "id": "90353"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\n90353\n",
+  "stderr": "",
+  "execution_time_ms": 50
+}

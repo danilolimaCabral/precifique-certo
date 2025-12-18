@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, sku, userId FROM products;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CoKcC9nrGmnRVN.e5cb2b17c667 --database 4s2RPQbUiLyDQzYKK4VQq2 --execute SELECT id, sku, userId FROM products;",
+  "rows": [
+    {
+      "id": "30001",
+      "sku": "CONVCOMBOTAO",
+      "userId": "90353"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsku\tuserId\n30001\tCONVCOMBOTAO\t90353\n",
+  "stderr": "",
+  "execution_time_ms": 48
+}

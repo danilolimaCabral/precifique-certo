@@ -1,0 +1,25 @@
+{
+  "query": "SELECT id, email, role FROM users;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CoKcC9nrGmnRVN.e5cb2b17c667 --database 4s2RPQbUiLyDQzYKK4VQq2 --execute SELECT id, email, role FROM users;",
+  "rows": [
+    {
+      "id": "1",
+      "email": "cellsync.hub@gmail.com",
+      "role": "admin"
+    },
+    {
+      "id": "90334",
+      "email": "teste@teste.com",
+      "role": "user"
+    },
+    {
+      "id": "90353",
+      "email": "admin@precifiquecerto.com",
+      "role": "admin"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\trole\n1\tcellsync.hub@gmail.com\tadmin\n90334\tteste@teste.com\tuser\n90353\tadmin@precifiquecerto.com\tadmin\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

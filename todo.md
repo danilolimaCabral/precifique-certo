@@ -194,10 +194,10 @@
 - [x] 179 testes unitários totais passando
 
 ## Bug Fix - Erro removeChild
-- [ ] Investigar erro "NotFoundError: Failed to execute 'removeChild'"
-- [ ] Identificar componente causador do problema
-- [ ] Implementar correção
-- [ ] Testar em produção
+- [x] Investigar erro "NotFoundError: Failed to execute 'removeChild'"
+- [x] Identificar componente causador do problema (Select do Radix UI)
+- [x] Implementar correção (container prop no SelectContent)
+- [x] Testar em produção
 
 ## Bug Fix - Erro ao selecionar produto na Precificação
 - [x] Investigar erro no Select de produtos
@@ -214,3 +214,9 @@
 - [x] Preencher comissão automaticamente (16%) e taxa fixa (R$ 6,00)
 - [x] Adicionar link no menu lateral
 - [x] 179 testes unitários passando
+
+## Bug Fix - Erro na página de Precificação
+- [x] Investigar erro ao selecionar produto/marketplace
+- [x] Corrigir problema no componente Select
+- [x] Adicionar coluna userId na tabela productMaterials
+- [x] Testar funcionalidade - Cálculo funcionando corretamente

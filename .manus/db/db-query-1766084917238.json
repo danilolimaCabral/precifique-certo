@@ -1,0 +1,17 @@
+{
+  "query": "SELECT p.id, p.sku, p.name, p.userId, u.email FROM products p LEFT JOIN users u ON p.userId = u.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CoKcC9nrGmnRVN.e5cb2b17c667 --database 4s2RPQbUiLyDQzYKK4VQq2 --execute SELECT p.id, p.sku, p.name, p.userId, u.email FROM products p LEFT JOIN users u ON p.userId = u.id;",
+  "rows": [
+    {
+      "id": "30001",
+      "sku": "CONVCOMBOTAO",
+      "name": "Conversor de Botão 30V",
+      "userId": "90353",
+      "email": "admin@precifiquecerto.com"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsku\tname\tuserId\temail\n30001\tCONVCOMBOTAO\tConversor de Botão 30V\t90353\tadmin@precifiquecerto.com\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}
