@@ -220,3 +220,11 @@
 - [x] Corrigir problema no componente Select
 - [x] Adicionar coluna userId na tabela productMaterials
 - [x] Testar funcionalidade - Cálculo funcionando corretamente
+
+## Bug Fix - Erro removeChild ao selecionar produto (CRÍTICO)
+- [x] Analisar vídeo do erro
+- [x] Identificar que o erro ocorre ao selecionar produto no Select
+- [x] Aplicar correção robusta no componente Select (forceMount, modal=false, keys únicas)
+- [x] Atualizar página Precificacao.tsx com memoização e loading states
+- [x] Testado no ambiente de desenvolvimento - funcionando corretamente
+- [x] 179 testes unitários passando

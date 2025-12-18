@@ -55,30 +55,8 @@ function SelectContent({
   align = "center",
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
-  // Use a stable container to avoid removeChild errors with browser extensions
-  const [container, setContainer] = React.useState<HTMLElement | null>(null);
-  
-  React.useEffect(() => {
-    // Create a stable container for the portal
-    const portalContainer = document.createElement("div");
-    portalContainer.setAttribute("data-select-portal", "true");
-    document.body.appendChild(portalContainer);
-    setContainer(portalContainer);
-    
-    return () => {
-      // Cleanup on unmount
-      if (portalContainer.parentNode) {
-        portalContainer.parentNode.removeChild(portalContainer);
-      }
-    };
-  }, []);
-
-  if (!container) {
-    return null;
-  }
-
   return (
-    <SelectPrimitive.Portal container={container}>
+    <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         data-slot="select-content"
         className={cn(
