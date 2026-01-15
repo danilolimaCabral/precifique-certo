@@ -149,6 +149,7 @@ export const appRouter = router({
     create: protectedProcedure.input(z.object({
       sku: z.string(),
       name: z.string(),
+      unitCost: z.string().optional(),
       height: z.string().optional(),
       width: z.string().optional(),
       length: z.string().optional(),
@@ -159,6 +160,7 @@ export const appRouter = router({
       id: z.number(),
       sku: z.string(),
       name: z.string(),
+      unitCost: z.string().optional(),
       height: z.string().optional(),
       width: z.string().optional(),
       length: z.string().optional(),
@@ -331,7 +333,14 @@ export const appRouter = router({
       const consideredWeight = Math.max(realWeight, cubedWeight);
       const shippingCost = await db.getShippingCost(input.marketplaceId, consideredWeight, userId);
       const commissionPercent = parseFloat(marketplace.commissionPercent as string || "0");
-      const fixedFee = parseFloat(marketplace.fixedFee as string || "0");
+      
+      // Taxa fixa: se for Mercado Livre, usa tabela dinâmica baseada no preço
+      // Senão, usa a taxa fixa configurada no marketplace
+      let fixedFee = parseFloat(marketplace.fixedFee as string || "0");
+      if (marketplace.name.toLowerCase().includes("mercado livre")) {
+        fixedFee = await db.getMlFixedFee(input.salePrice);
+      }
+      
       const commission = (input.salePrice * commissionPercent / 100) + fixedFee;
       const taxPercent = input.taxPercent ?? parseFloat(settingsData?.taxPercent as string || "0");
       const taxValue = input.salePrice * taxPercent / 100;

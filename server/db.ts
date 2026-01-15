@@ -1,6 +1,6 @@
 import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, materials, products, productMaterials, marketplaces, shippingRanges, settings, customCharges, pricingRecords, plans, taxRegimes, Material, Product, ProductMaterial, Marketplace, ShippingRange, Settings, CustomCharge, PricingRecord, Plan, TaxRegime, InsertMaterial, InsertProduct, InsertProductMaterial, InsertMarketplace, InsertShippingRange, InsertSettings, InsertCustomCharge, InsertPricingRecord, InsertPlan, InsertTaxRegime } from "../drizzle/schema";
+import { InsertUser, users, materials, products, productMaterials, marketplaces, shippingRanges, settings, customCharges, pricingRecords, plans, taxRegimes, mlFixedFeeRanges, Material, Product, ProductMaterial, Marketplace, ShippingRange, Settings, CustomCharge, PricingRecord, Plan, TaxRegime, InsertMaterial, InsertProduct, InsertProductMaterial, InsertMarketplace, InsertShippingRange, InsertSettings, InsertCustomCharge, InsertPricingRecord, InsertPlan, InsertTaxRegime } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import bcrypt from 'bcryptjs';
 import { nanoid } from 'nanoid';
@@ -334,6 +334,14 @@ export async function deleteCustomCharge(id: number, userId: number) {
 export async function calculateProductCost(productId: number, userId: number): Promise<number> {
   const db = await getDb();
   if (!db) return 0;
+  
+  // Primeiro verifica se o produto tem custo direto (unitCost)
+  const product = await getProductById(productId, userId);
+  if (product && product.unitCost) {
+    return parseFloat(product.unitCost as string);
+  }
+  
+  // Se não tiver custo direto, calcula pela BOM (lista de materiais)
   const bom = await getProductMaterials(productId, userId);
   let totalCost = 0;
   for (const item of bom) {
@@ -864,4 +872,29 @@ export async function deleteTaxRegime(id: number): Promise<{ success: boolean; m
   
   await db.delete(taxRegimes).where(eq(taxRegimes.id, id));
   return { success: true };
+}
+
+// ============ MERCADO LIVRE FIXED FEE RANGES ============
+export async function getMlFixedFee(salePrice: number): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  
+  const result = await db.select().from(mlFixedFeeRanges);
+  
+  for (const range of result) {
+    const minPrice = parseFloat(range.minPrice as string);
+    const maxPrice = parseFloat(range.maxPrice as string);
+    
+    if (salePrice >= minPrice && salePrice <= maxPrice) {
+      return parseFloat(range.fixedFee as string);
+    }
+  }
+  
+  return 0;
+}
+
+export async function getMlFixedFeeRanges() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(mlFixedFeeRanges).orderBy(mlFixedFeeRanges.minPrice);
 }

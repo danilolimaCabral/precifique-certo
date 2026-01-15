@@ -9,7 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { trpc } from "@/lib/trpc";
-import { Settings, Plus, Pencil, Trash2, Percent, DollarSign, Calculator, Search, Check, ChevronsUpDown, Building2 } from "lucide-react";
+import { Settings, Plus, Pencil, Trash2, Percent, DollarSign, Calculator, Search, Check, ChevronsUpDown, Building2, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -218,14 +219,38 @@ export default function Configuracoes() {
 
                   {/* ADS */}
                   <div className="space-y-2">
-                    <Label>ADS - Publicidade (%)</Label>
+                    <div className="flex items-center gap-2">
+                      <Label>ADS - Publicidade (%)</Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>Percentual do preço de venda investido em publicidade e marketing (Google Ads, Facebook Ads, etc.).</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                     <Input type="number" step="0.01" value={settingsForm.adsPercent} onChange={(e) => setSettingsForm({ ...settingsForm, adsPercent: e.target.value })} />
                   </div>
 
                   {/* OPEX */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Tipo de OPEX</Label>
+                      <div className="flex items-center gap-2">
+                        <Label>Tipo de OPEX</Label>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <p>Despesas operacionais. Escolha "Percentual" para custos variáveis (ex: 5% do preço) ou "Fixo" para custos fixos por produto (ex: R$ 2,00).</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                       <Select value={settingsForm.opexType} onValueChange={(v) => setSettingsForm({ ...settingsForm, opexType: v as "percent" | "fixed" })}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -242,7 +267,19 @@ export default function Configuracoes() {
 
                   {/* Min Margin Target */}
                   <div className="space-y-2">
-                    <Label>Meta de Margem Mínima (%)</Label>
+                    <div className="flex items-center gap-2">
+                      <Label>Meta de Margem Mínima (%)</Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>Margem de lucro mínima desejada. O sistema alertará quando a margem ficar abaixo deste valor.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                     <Input type="number" step="0.01" value={settingsForm.minMarginTarget} onChange={(e) => setSettingsForm({ ...settingsForm, minMarginTarget: e.target.value })} />
                   </div>
 

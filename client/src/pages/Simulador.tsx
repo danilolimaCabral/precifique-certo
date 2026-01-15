@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
+
 import { trpc } from "@/lib/trpc";
 import { Sliders, AlertTriangle, CheckCircle, TrendingUp } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
@@ -81,21 +81,51 @@ export default function Simulador() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-3">
-                <div className="flex justify-between"><Label>Preço de Venda</Label><span className="text-sm font-mono">{formatCurrency(salePrice)}</span></div>
-                <Slider value={[salePrice]} onValueChange={([v]) => setSalePrice(v)} min={1} max={1000} step={1} />
+              <div className="space-y-2">
+                <Label>Preço de Venda (R$)</Label>
+                <Input 
+                  type="number" 
+                  step="0.01" 
+                  min="0"
+                  value={salePrice} 
+                  onChange={(e) => setSalePrice(Number(e.target.value) || 0)}
+                  placeholder="0,00"
+                />
               </div>
-              <div className="space-y-3">
-                <div className="flex justify-between"><Label>Imposto (%)</Label><span className="text-sm font-mono">{taxPercent.toFixed(1)}%</span></div>
-                <Slider value={[taxPercent]} onValueChange={([v]) => setTaxPercent(v)} min={0} max={30} step={0.5} />
+              <div className="space-y-2">
+                <Label>Imposto (%)</Label>
+                <Input 
+                  type="number" 
+                  step="0.1" 
+                  min="0"
+                  max="100"
+                  value={taxPercent} 
+                  onChange={(e) => setTaxPercent(Number(e.target.value) || 0)}
+                  placeholder="0,0"
+                />
               </div>
-              <div className="space-y-3">
-                <div className="flex justify-between"><Label>ADS (%)</Label><span className="text-sm font-mono">{adsPercent.toFixed(1)}%</span></div>
-                <Slider value={[adsPercent]} onValueChange={([v]) => setAdsPercent(v)} min={0} max={30} step={0.5} />
+              <div className="space-y-2">
+                <Label>ADS - Publicidade (%)</Label>
+                <Input 
+                  type="number" 
+                  step="0.1" 
+                  min="0"
+                  max="100"
+                  value={adsPercent} 
+                  onChange={(e) => setAdsPercent(Number(e.target.value) || 0)}
+                  placeholder="0,0"
+                />
               </div>
-              <div className="space-y-3">
-                <div className="flex justify-between"><Label>OPEX ({settings?.opexType === "fixed" ? "R$" : "%"})</Label><span className="text-sm font-mono">{settings?.opexType === "fixed" ? formatCurrency(opexValue) : `${opexValue.toFixed(1)}%`}</span></div>
-                <Slider value={[opexValue]} onValueChange={([v]) => setOpexValue(v)} min={0} max={settings?.opexType === "fixed" ? 50 : 20} step={0.5} />
+              <div className="space-y-2">
+                <Label>OPEX ({settings?.opexType === "fixed" ? "R$" : "%"})</Label>
+                <Input 
+                  type="number" 
+                  step="0.1" 
+                  min="0"
+                  value={opexValue} 
+                  onChange={(e) => setOpexValue(Number(e.target.value) || 0)}
+                  placeholder="0,0"
+                />
               </div>
             </CardContent>
           </Card>

@@ -16,7 +16,7 @@ export default function Produtos() {
   const [bomOpen, setBomOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
-  const [form, setForm] = useState({ sku: "", name: "", height: "", width: "", length: "", realWeight: "", isActive: true });
+  const [form, setForm] = useState({ sku: "", name: "", unitCost: "", height: "", width: "", length: "", realWeight: "", isActive: true });
   const [bomForm, setBomForm] = useState({ materialId: "", quantity: "" });
 
   const utils = trpc.useUtils();
@@ -31,7 +31,7 @@ export default function Produtos() {
   const addBomMutation = trpc.productMaterials.add.useMutation({ onSuccess: () => { utils.productMaterials.list.invalidate(); setBomForm({ materialId: "", quantity: "" }); toast.success("Material adicionado!"); } });
   const deleteBomMutation = trpc.productMaterials.delete.useMutation({ onSuccess: () => { utils.productMaterials.list.invalidate(); toast.success("Material removido!"); } });
 
-  const resetForm = () => { setForm({ sku: "", name: "", height: "", width: "", length: "", realWeight: "", isActive: true }); setEditId(null); };
+  const resetForm = () => { setForm({ sku: "", name: "", unitCost: "", height: "", width: "", length: "", realWeight: "", isActive: true }); setEditId(null); };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +40,7 @@ export default function Produtos() {
   };
 
   const handleEdit = (product: NonNullable<typeof products>[number]) => {
-    setForm({ sku: product.sku, name: product.name || "", height: String(product.height || ""), width: String(product.width || ""), length: String(product.length || ""), realWeight: String(product.realWeight || ""), isActive: product.isActive });
+    setForm({ sku: product.sku, name: product.name || "", unitCost: String(product.unitCost || ""), height: String(product.height || ""), width: String(product.width || ""), length: String(product.length || ""), realWeight: String(product.realWeight || ""), isActive: product.isActive });
     setEditId(product.id);
     setOpen(true);
   };
@@ -98,6 +98,11 @@ export default function Produtos() {
                     <Label>Nome</Label>
                     <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Custo do Produto (R$)</Label>
+                  <Input type="number" step="0.01" value={form.unitCost} onChange={(e) => setForm({ ...form, unitCost: e.target.value })} placeholder="Deixe vazio para calcular pela BOM" />
+                  <p className="text-xs text-muted-foreground">Opcional: Informe o custo direto ou deixe vazio para calcular automaticamente pela lista de materiais (BOM)</p>
                 </div>
                 <div className="grid grid-cols-4 gap-4">
                   <div className="space-y-2">

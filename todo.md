@@ -228,3 +228,14 @@
 - [x] Atualizar página Precificacao.tsx com memoização e loading states
 - [x] Testado no ambiente de desenvolvimento - funcionando corretamente
 - [x] 179 testes unitários passando
+
+
+## Correções Relatório Pedro Victor
+- [x] Adicionar campo "Custo do Produto" entre Nome e Dimensões no cadastro de produtos
+- [x] Corrigir cálculo de cubagem para (C x L x A) / 6000 (resultado em Kg) - já estava correto
+- [x] Implementar taxa fixa variável por faixa de preço (Mercado Livre tem taxa fixa apenas para produtos < R$ 79)
+- [x] Garantir que Frete seja puxado corretamente na Precificação - já estava funcionando
+- [x] Garantir que Custo do Produto seja puxado corretamente na Precificação - agora usa unitCost se disponível
+- [x] Implementar tabela de taxa fixa do Mercado Livre (varia conforme preço do produto)
+- [x] Melhorar Simulador de Cenários: trocar sliders por inputs manuais para permitir valores precisos (ex: 7,1% de OPEX)
+- [x] Adicionar ícones informativos (tooltips) com "i" nas páginas para ajudar usuários com dúvidas

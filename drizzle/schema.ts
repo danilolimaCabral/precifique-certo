@@ -66,6 +66,7 @@ export const products = mysqlTable("products", {
   userId: int("userId").notNull(), // Tenant isolation
   sku: varchar("sku", { length: 100 }).notNull(),
   name: text("name").notNull(),
+  unitCost: decimal("unitCost", { precision: 10, scale: 2 }), // Custo direto do produto (opcional, se não usar BOM)
   height: decimal("height", { precision: 10, scale: 2 }),
   width: decimal("width", { precision: 10, scale: 2 }),
   length: decimal("length", { precision: 10, scale: 2 }),
@@ -202,3 +203,16 @@ export const mlCredentials = mysqlTable("mlCredentials", {
 
 export type MlCredential = typeof mlCredentials.$inferSelect;
 export type InsertMlCredential = typeof mlCredentials.$inferInsert;
+
+// Mercado Livre Fixed Fee Ranges - System-wide (shared across all users)
+export const mlFixedFeeRanges = mysqlTable("mlFixedFeeRanges", {
+  id: int("id").autoincrement().primaryKey(),
+  minPrice: decimal("minPrice", { precision: 10, scale: 2 }).notNull(),
+  maxPrice: decimal("maxPrice", { precision: 10, scale: 2 }).notNull(),
+  fixedFee: decimal("fixedFee", { precision: 10, scale: 2 }).notNull(),
+  description: text("description"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type MlFixedFeeRange = typeof mlFixedFeeRanges.$inferSelect;
+export type InsertMlFixedFeeRange = typeof mlFixedFeeRanges.$inferInsert;

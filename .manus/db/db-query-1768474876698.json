@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE products ADD COLUMN unitCost decimal(10,2) AFTER name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2CoKcC9nrGmnRVN.e5cb2b17c667 --database 4s2RPQbUiLyDQzYKK4VQq2 --execute ALTER TABLE products ADD COLUMN unitCost decimal(10,2) AFTER name;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1037
+}
