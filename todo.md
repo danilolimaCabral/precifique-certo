@@ -254,3 +254,12 @@
 - [ ] Testar todas as páginas
 - [ ] Salvar checkpoint
 - [ ] Push para GitHub
+
+
+## Novas Funcionalidades - Fase 2
+- [ ] Exportação de relatórios em PDF (Precificação e CTM)
+- [ ] Página de Histórico de Precificações
+- [ ] Sistema de Alertas Automáticos
+- [ ] Logo personalizado GetCerto
+- [ ] Testar todas as funcionalidades
+- [ ] Push para GitHub
