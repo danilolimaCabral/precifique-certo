@@ -1,4 +1,4 @@
-# PRECIFIQUE CERTO - TODO
+# GetCerto - TODO
 
 ## Módulos Principais
 - [x] Cadastro de Materiais (SKU, descrição, tipo insumo/embalagem, custo unitário, status)
@@ -239,3 +239,18 @@
 - [x] Implementar tabela de taxa fixa do Mercado Livre (varia conforme preço do produto)
 - [x] Melhorar Simulador de Cenários: trocar sliders por inputs manuais para permitir valores precisos (ex: 7,1% de OPEX)
 - [x] Adicionar ícones informativos (tooltips) com "i" nas páginas para ajudar usuários com dúvidas
+
+
+## Renomeação do Projeto para GetCerto
+- [ ] Atualizar package.json com novo nome
+- [ ] Atualizar README.md
+- [ ] Atualizar título no DashboardLayout
+- [ ] Atualizar título na página Home
+- [ ] Atualizar título na página de Login
+- [ ] Atualizar título na página de Cadastro
+- [ ] Atualizar variável VITE_APP_TITLE
+- [ ] Atualizar todos os textos "PRECIFIQUE CERTO" para "GetCerto"
+- [ ] Atualizar meta tags e títulos HTML
+- [ ] Testar todas as páginas
+- [ ] Salvar checkpoint
+- [ ] Push para GitHub

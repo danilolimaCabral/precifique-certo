@@ -79,7 +79,7 @@ export default function Home() {
               </div>
               <span className="text-sm font-medium text-primary">Dashboard</span>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight">Bem-vindo ao <span className="text-gradient">PRECIFIQUE CERTO</span></h1>
+            <h1 className="text-3xl font-bold tracking-tight">Bem-vindo ao <span className="text-gradient">GetCerto</span></h1>
             <p className="text-muted-foreground mt-2 max-w-2xl">Sistema completo de formação de preço e análise de custos para e-commerce.</p>
           </div>
         </div>

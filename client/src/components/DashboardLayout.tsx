@@ -102,7 +102,7 @@ export default function DashboardLayout({
               <Calculator className="h-8 w-8 text-primary" />
             </div>
             <h1 className="text-3xl font-bold tracking-tight text-center bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              PRECIFIQUE CERTO
+              GetCerto
             </h1>
             <p className="text-sm text-muted-foreground text-center max-w-sm">
               Sistema de formação de preço e análise de custos para e-commerce.
@@ -240,7 +240,7 @@ function DashboardLayoutContent({
               {!isCollapsed ? (
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="font-bold tracking-tight truncate text-primary">
-                    PRECIFIQUE CERTO
+                    GetCerto
                   </span>
                 </div>
               ) : null}

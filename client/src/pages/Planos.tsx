@@ -90,7 +90,7 @@ export default function Planos() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/">
             <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent cursor-pointer">
-              PRECIFIQUE CERTO
+              GetCerto
             </span>
           </Link>
           <div className="flex items-center gap-4">
@@ -402,7 +402,7 @@ export default function Planos() {
       {/* Footer */}
       <footer className="border-t bg-white py-8">
         <div className="container mx-auto px-4 text-center text-gray-600">
-          <p>© 2025 PRECIFIQUE CERTO. Todos os direitos reservados.</p>
+          <p>© 2025 GetCerto. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>

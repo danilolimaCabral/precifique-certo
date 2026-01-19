@@ -15,7 +15,7 @@ export default function Cadastro() {
 
   const registerMutation = trpc.auth.register.useMutation({
     onSuccess: () => {
-      toast.success("Conta criada com sucesso! Bem-vindo ao PRECIFIQUE CERTO!");
+      toast.success("Conta criada com sucesso! Bem-vindo ao GetCerto!");
       setLocation("/");
       window.location.reload();
     },
@@ -173,7 +173,7 @@ export default function Cadastro() {
         {/* Benefits */}
         <div className="mt-8 space-y-3">
           <p className="text-sm font-medium text-center text-foreground">
-            Com o PRECIFIQUE CERTO você pode:
+            Com o GetCerto você pode:
           </p>
           <div className="grid gap-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
